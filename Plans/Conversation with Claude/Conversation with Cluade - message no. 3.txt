@@ -1,0 +1,61 @@
+1. Data Consistency Concerns ✅ (Mostly resolved)
+What happens if a user is deleted while they're referenced in active lists?
+when reloading the list, it will be displayed as [deleted user]. All personal data will be removed. I don't care about what was added to the product list (the one that is used to process messages).
+
+What if user display name changes—do you update it everywhere or fetch it on-demand?
+on demend.
+
+Revised recommendation:
+
+Soft deletes for users (mark as deleted, don't actually remove)
+the ID will stay with only a "deleted: true", everything else will be removed, just so that the DB will not get messed up.
+I don't want to store any information about people who are not using my app. They made the choice, I must respect ot 100%.
+
+Users Service acts as the source of truth, other services cache user data in Redis with short TTL (5-10 minutes)
+Can you make give some examples?
+
+3. Batch Updates to Product List DB ✅
+Will do!
+
+4. AI Suggestion Modification Logic ✅
+Will do!
+
+5. Chat-to-List Item Creation ✅
+Yeah, that's what I meant.
+Also, when the item was added, the score will be increased. RabbitMQ -> Scoring Service -> increase score.
+
+6. WebSocket Connection Management ✅
+I KNEW IT!!!
+I had a theory this is an awful framework - harder to learn and use then FastAPI, slower. Never comming back to it again.
+(Any good resone today for using it and not FastAPI? Even with the battery included and good community pros?)
+Flask is the worst BTW. Like FastAPI, but NEVER works.
+
+7. Missing Error Handling Flows
+I'll add a DLQ.
+
+For your app: Use circuit breakers on:
+- Message Processor → AI
+- AI Suggestion Service → AI
+- Any external HTTP calls
+Will do. pybreaker is good enough.
+
+8. Shared List Concurrency
+OK Good. I need to research how other apps deals with such thing, from a UX point of view. I'm not sure if there is a solution anywhere in the world, as this kind of problem is so rare...
+But the number is a great idea! Thanks!
+
+10. Product List DB Growth ✅
+So, redis will search, no need for python, right?
+
+11. Nginx as API Gateway ✅
+After JWT validation, all I'll add in the service is - "is the user allowed to do this task?" but this is a per-request test. I'll use decorators for that, like everybody else does.
+
+13. Service Discovery
+Gosh I like kubernetes.
+
+14. CQRS
+OK.
+
+15. Service mesh (Istio?) for observability
+what's that?
+
+16. When using kubernetes, Ngnix should work closely with kubenetes. Ain't it clushing with k8s abit?

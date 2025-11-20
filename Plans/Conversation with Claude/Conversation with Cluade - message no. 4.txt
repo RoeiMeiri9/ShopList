@@ -1,0 +1,32 @@
+1. DB Writer Service - "One for every DB"
+Are you sure I don't need any of this? It should only happen once per 30sec. What if one of the services is overload? it will miss it. And I don't want to lose data.
+There is a possibility of this being too complicated, and I'll remove it...
+
+2. Missing: WebSocket Broadcaster
+Anything that should be updated in WS, should be stored as an Event that was either done or not, and should be happened from the service itself, don't you think?
+
+3. Missing: User Cache Updater Service
+When dealing with the settings, I may add a new service for that. Currently I don't think there are enough settings to seperate it from the Users service (about 5-6 settings at most).
+
+4. AI Suggestion Service Flow
+Keyword Manager = Product List Orchestrator, I forgot what we said. Will fix.
+The arrows are a simplification of the flow as the diagram is a bit dense. The real flow is close, but it will look like this:
+
+Lists Service → Kafka (item-added) → Keyword Manager - checks if the item is in the Prefered List (btw will be called history from now on) (stored in redis). If there is a close fit, update. If not, Add. → Kafka (history-updated) → History-DB-Writer updates the DB.
+
+5. Redis Connections
+Message Analyzer is connected. Oh well...
+
+6. Kafka Topics (Optional - For Clarity)
+nuh... I'll document it somewhere else, it will be a mess.
+
+7. Missing: Statistics Service (Future)
+Oops, will fix.
+
+8. Front → Nginx Arrow Label
+OK
+
+9. Nginx → Backend Services
+OK
+
+

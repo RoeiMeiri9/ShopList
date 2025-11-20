@@ -1,0 +1,103 @@
+A few things - I'll add and maybe replace Rabbit with Kafka. Any connection between two services will be stored there for the history.
+
+1. Data Consistency Concerns
+I want to make sure we understand each other - all of the DBs are refencing IDs that are stored in the Users DB. When I'm adding for say a new list, I'll add the User ID and the IDs of the users who are part of the list's friend group. When I put those IDs, I want to reference them.
+
+Now that I was a bit more clear, are the suggestion and risks still relevant? 
+Note that I do have a Users service, which controlls things like personal prefrences (Dark Theme, Display Name and so forth). I can ask it for details about users if needed, but most of the time the details should arrive from the Front.
+
+If so, I'd like to learn more about: event sourcing for user changes
+
+2. Message Processor Overload
+Will do!
+
+3. Batch Updates to Product List DB
+I guess the best approach is to use Redis persistence, as it will be the single source of truth, and the DB is currently not used more than for a backup of the list. But, do you think there's a reason not to follow this approach and to follow a different one from the 3 you gave?
+
+4. AI Suggestion Modification Logic (Flow #11)
+After thinking about it a bit, for every item you add, it will be sent to the Rabbit, and a simillar item was found in the DB under your prefrences, it will be updated to be the last item you've added. It's more like an history of what was the latest item you've added.
+
+If you've added a suggestion from the AI, just like when you've modified any of the lines, just like adding, this will be sent to the Rabbit to manipulate the DB.
+Anyway, each item has the following metadata - "who added it", and 'source': "ai_suggestion" | "manual".
+I know that there will be some great amount of IO for this part, so maybe I'll use Redis persistence. What do you say?
+
+5. Chat-to-List Item Creation (Flow #5)
+My bad, actually I know the flow and it's specified in the diagram but as you'll see in a moment, it's hard to understand it just from there.
+Here is a clearer version of the flow (which also is shown in Figma):
+
+*What the user see:*
+He writes a message like "I want to add bears and stakes".
+A button of (+) appears next to his message (after a few milliseconds in the best case).
+He presses the button, and in front of him appears a popup with two lines - one contains "bears" and one "stakes", and a plus button on each line. He can edit and add this line, or dismis it.
+
+*Under the hood*
+Message is sent to the Chat service in WS.
+Message is moved to the Rabbit (also it's stored in the DB and sent to other users).
+Message processer is taking the message, processing it according to what I've told you in the last prompt.
+When a JSON of all of the products that were mentioned is ready, it will be sent through WS to the client
+A (+) button is displayed.
+
+6. WebSocket Connection Management
+Each list = it's own room. Any need for more then that?
+And yeah, there will be some great amount of WS services running at the same time, I'm not sure how I'll handle multiplication of them, if I'll use Django Channels it will be super easy, but I'm afraid it will perfrom very purely as I never saw a single implementation of django that was fast. ws are fine but REST are awful and DB manipulation was a nightmere and suuuper slow. I'm not sure why is that like that.....
+
+7. Missing Error Handling Flows
+You're absolutely right. What do you say, should I handle it all at once, or should I handle each error when I'm dealing with the service itself? The question is - will any of the fixes will manipulate the diagram in any way? if not, can I deal with the errors when working on the services?
+
+also I'd like to learn more about: circuit breakers, dead letter queues
+
+8. Shared List Concurrency
+Lets say two users are updating the same item at the exact same time. Theoratically possible, humenly impossible but I can go with that.
+DBs are locked when being edit. One of the edits should lock the DB. All of the items who are part of the same list, should live under the same DB instance. If the DB is locked, the other item should wait, and this will be the "winning item".
+What do you say?
+
+9. Chat-List Relationship
+When you remove list, you also remove a chat and all of it's messages. No need to store them. It will be stored in Kafka so that there will be no other option. The chat will be removed.
+Also, you can't remove chat alone from the UI. Its possible only when removing the list.
+
+10. Product List DB Growth
+You must remember that before adding any new item (indefinitely) to the product list, it must:
+1. Go through the AI.
+2. Be approved by real users. If more then 5 times users are dismissing it, the word will be added to the black list.
+3. This is new - product list should contain all of the product preferences of all of the users. Evey so often, the two lists should be emereged. As I think I'll use redis persistance for the product list, there will be a seperate service for such manipulations. 
+4. Misspellings? Fuzzy search.
+
+11. Nginx as API Gateway
+Did not get to that part yet. When I will, I'll make sure to go over everything that I need for that, but for now it's too zoomed in. Good point though.
+If Ngnix for some resone does not support any of those features, please let me know!
+
+12. Statistics Service (Future)
+This is the money maker. Selling statistics will make this app stay alive, but until I have customers, and a good UX, it's not important. 7000+ chars for this prompt about the current state, more then enough.
+
+13: Add Service Discovery (Consul?) if you scale beyond a few services
+never heard about it
+14: Implement CQRS for Lists (separate read/write models)
+never heard about it
+
+Data Flow for Chat Product Suggestion:
+good. we are on the same page.
+
+Questions for You
+
+1. Scale expectations: How many concurrent users/lists?
+zero-day - one. My hope - million active lists. Lists that were closed, the list and chat will exsist, but you will not enter a WS room for it.
+
+2. Consistency vs Availability: Can users tolerate seeing stale data for a few seconds?
+As the nature of the app is about "this is my task" and "finnised my task", things should act FAST. I can't imagen latency of more than one second at most and that also is wayyy too much.
+AI Suggestion can be a bit slower.
+Message processor, idealy should be immidiate. As the product list will be reacher, there will be less AI involved, the black list should be in a higher quality, but I really hope the fuzzy search will be a good approach as this search, which will be done million of times at most every minute, is the real back bone of the feature.
+
+Statistics will be much slower.
+
+3. Auth0 integration: Are you planning JWT tokens? How will services validate them?
+Yeah. How? Well, every REST request will send the JWT. Middlewere will make sure to drop any request that is illigal before it enters any service. I'll work on this part when dealing with Ngnix.
+In case I won't be able to do that on Nginx, I'll look for the best approach.
+
+4. List sharing: Public links? Email invites? User search?
+User search based on phone number. Invites will be sent though SMS. Will work on this part later.
+
+5. Mobile app: Is the "Front" a web app, mobile app, or both?
+React native.
+
+6. Deployment: Docker? Kubernetes? Monorepo or separate repos?
+Docker and later Kubernetes (depending on where I'll put this app). Monorepo for now (will be easier to show my work as all of this is also for my resume). When I'll make this a real app, I'll seperate it to multiple repos.
