@@ -57,6 +57,8 @@ Manages Login and JWTs
       &nbsp;&nbsp; ↓
    4. _#FIGURE OUT WHATS NEXT_
 
+&nbsp;
+
 2. **JWT to `user_id`**
    1. Front sends REST request\
       &nbsp;&nbsp; ↓
@@ -68,12 +70,16 @@ Manages Login and JWTs
       &nbsp;&nbsp; ↓
    5. Destination Service receives request
 
+---
+
 ### Users
 
 Manages users, user data, user settings
 
 > [!NOTE]
 > This service will be divided into Users Manager and Settings Service, when more settings will be added.
+
+---
 
 ### Lists
 
@@ -85,7 +91,7 @@ Manages users, user data, user settings
       &nbsp;&nbsp; ↓
    3. For every list, items are fetched from Redis - 5 at most.\
       &nbsp;&nbsp; ↓
-   4. Lists put on Kafka a request to send the client how many messages were missed for every list\
+   4. Lists Service Publishes event to Kafka, consumed by Chat Service\
       &nbsp;&nbsp; ↓
    5. **First response is sent to front.**\
       _Content of Response:_
@@ -108,11 +114,13 @@ Manages users, user data, user settings
    ]
    ```
 
-   6. Displayed in Front\
-      &nbsp;&nbsp; ... ... ...
-   7. Chat fetches amount of unread messages for every list, and last message\
+   6. Displayed in Front
+      ***
+   7. Chat read event from Kafka\
       &nbsp;&nbsp; ↓
-   8. **Second response is sent to the front.**\
+   8. Chat fetches amount of unread messages for every list, and last message\
+      &nbsp;&nbsp; ↓
+   9. **Second response is sent to the front.**\
       _Content of Response:_
 
    ```JSON
@@ -125,10 +133,12 @@ Manages users, user data, user settings
    ]
    ```
 
-   9. Front display new data.\
-      &nbsp;&nbsp; ↓
-   10. SSE Closes.\
-       _Later updates are based on WS activities._
+   10. Front display new data.\
+       &nbsp;&nbsp; ↓
+   11. SSE Closes.\
+        _Later updates are based on WS activities._
+
+&nbsp;
 
 2. **Get List by ID**
 
@@ -140,6 +150,8 @@ Manages users, user data, user settings
       &nbsp;&nbsp; ↓
    4. Front displays list
 
+&nbsp;
+
 3. **Update List / Item**
 
    1. Front sends `POST` request\
@@ -149,15 +161,40 @@ Manages users, user data, user settings
       &nbsp;&nbsp; ↓
    3. Update is broadcasted to all room members\
       &nbsp;&nbsp; ↓
-   4. Front displays update.\
-      **Note** - for the user who made the update, it displayed before being broadcasted. If there is a problem, silent retry and backup in localhost.
+   4. Front displays update.
+      > [!Note]
+      > for the user who made the update, it displayed before being broadcasted. If there is a problem, silent retry and backup in localhost.
+
+&nbsp;
 
 4. **Share List**
+
+   > [!Note] SMS not part of MVP
+   > Apart from mentioning the SMS Service, the current flow does not include the SMS path.
+
    1. Front sends `POST` request with all userIDs and unrecognized phone numbers\
       &nbsp;&nbsp; ↓
-   2.
+   2. List Service adds members to list\
+      &nbsp;&nbsp; ↓
+   3. Publishes event to Kafka, consumed by:
+
+      - Chat Service
+      - SMS Service - _planned_
+
+      &nbsp;&nbsp; ↓
+
+   4. Chat Service enters users to equivalent chat\
+      &nbsp;&nbsp; ↓
+   5. WS adds users to room
+
+---
 
 ### Chat
+
+> [!Note]
+> Some of the flows are scattered across different services, as they are part of bigger flows.
+
+---
 
 ### DB Writer
 
