@@ -7,4 +7,3 @@ User adds item → Kafka ✅ + Redis ✅ → Instant response
                    ↓
               PostgreSQL ✅
 ```
-
