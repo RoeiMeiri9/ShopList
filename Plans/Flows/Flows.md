@@ -10,11 +10,20 @@ For that reason, ShopList is divided into two parts:
 1. B2C - The known part of ShopList.
 2. B2B - Displaying statistics, based on users activities.
 
-> [!NOTE]
-> All events are logged in Kafka. Each event has `type`, `data` and `state` to them.\
+> [!NOTE] All events are logged in Kafka.
+> Each event has `type`, `data` and `state` to them.\
 > When failing service is reinitiated, it will look over all of the `"state": "started"` events, and retry them.
 >
 > For brevity, kafka logs are omitted from flow diagrams unless it plays a special role beyond standard logging.
+
+> [!NOTE] From Redis to DB
+> All writes on Redis are followed with notifications in kafka for the DB Writer to push update
+>
+> For brevity, update DB logs are omitted from flow diagram unless it plays a special role beyond standard role.
+>
+> See [DB Writer](#db-writer) for implementation details.
+
+---
 
 ## 1. B2C Flows
 
@@ -24,8 +33,9 @@ This part is divided into 3 categories:
 2. **Message Process** - Message Analyzer, Keyword Manager, Scoring
 3. **AI Suggestions** - AI Suggestion, Keyword Manager
 
-> [!NOTE]
-> All REST API requests pass through Nginx, which validates the JWT token and replaces it with the authenticated `user_id` before forwarding to downstream services.
+> [!NOTE] All REST request must have JWT
+> All REST API requests pass through Nginx, which sends them to the Auth service for JWT token validation.\
+> Valid requests are modified to have `user_id` instead of JWT before forwarding to downstream services.
 >
 > For brevity, Nginx is omitted from flow diagrams unless it plays a service-specific role beyond standard authentication.
 >
@@ -37,25 +47,26 @@ This part is divided into 3 categories:
 
 Manages Login and JWTs
 
-1. **Login**\
-   Front redirect to Auth0\
-    &nbsp;&nbsp; ↓\
-   User Login\
-    &nbsp;&nbsp; ↓\
-   JWT is sent to the Auth\
-    &nbsp;&nbsp; ↓\
-    #FIGURE OUT WHATS NEXT
+1. **Login**
 
-2. **JWT to `user_id`**\
-   Front sends REST request\
-    &nbsp;&nbsp; ↓\
-   Nginx extracts JWT\
-    &nbsp;&nbsp; ↓\
-   Auth Service validates JWT, returns `user_id`\
-    &nbsp;&nbsp; ↓\
-   Nginx adds `user_id` to headers\
-    &nbsp;&nbsp; ↓\
-   Destination Service receives request
+   1. Front redirect to Auth0\
+      &nbsp;&nbsp; ↓
+   2. User Login\
+      &nbsp;&nbsp; ↓
+   3. JWT is sent to the Auth\
+      &nbsp;&nbsp; ↓
+   4. _#FIGURE OUT WHATS NEXT_
+
+2. **JWT to `user_id`**
+   1. Front sends REST request\
+      &nbsp;&nbsp; ↓
+   2. Nginx extracts JWT\
+      &nbsp;&nbsp; ↓
+   3. Auth Service validates JWT, returns `user_id`\
+      &nbsp;&nbsp; ↓
+   4. Nginx adds `user_id` to headers\
+      &nbsp;&nbsp; ↓
+   5. Destination Service receives request
 
 ### Users
 
@@ -66,17 +77,18 @@ Manages users, user data, user settings
 
 ### Lists
 
-1. **Get Lists** - SSE\
-   Front sends `GET` request\
-    &nbsp;&nbsp; ↓\
-   Lists are fetched from Redis.\
-    &nbsp;&nbsp; ↓\
-   For every list, items are fetched from Redis - 5 at most.\
-    &nbsp;&nbsp; ↓\
-   Lists put on Kafka a request to send the client how many messages were missed for every list\
-    &nbsp;&nbsp; ↓\
-   **First response is sent to front.**\
-   _Content of Response:_
+1. **Get Lists** - SSE
+
+   1. Front sends `GET` request\
+      &nbsp;&nbsp; ↓
+   2. Lists are fetched from Redis.\
+      &nbsp;&nbsp; ↓
+   3. For every list, items are fetched from Redis - 5 at most.\
+      &nbsp;&nbsp; ↓
+   4. Lists put on Kafka a request to send the client how many messages were missed for every list\
+      &nbsp;&nbsp; ↓
+   5. **First response is sent to front.**\
+      _Content of Response:_
 
    ```JSON
    [
@@ -96,13 +108,12 @@ Manages users, user data, user settings
    ]
    ```
 
-   &nbsp;&nbsp; ↓\
-   Displayed in Front\
-    &nbsp;&nbsp; ... ... ...\
-   Chat fetches amount of unread messages for every list, and last message\
-    &nbsp;&nbsp; ↓\
-   **Second response is sent to the front.**\
-   _Content of Response:_
+   6. Displayed in Front\
+      &nbsp;&nbsp; ... ... ...
+   7. Chat fetches amount of unread messages for every list, and last message\
+      &nbsp;&nbsp; ↓
+   8. **Second response is sent to the front.**\
+      _Content of Response:_
 
    ```JSON
    [
@@ -114,27 +125,37 @@ Manages users, user data, user settings
    ]
    ```
 
-   &nbsp;&nbsp; ↓\
-   Front display new data.\
-   &nbsp;&nbsp; ↓\
-   SSE Closes.\
-   Later updates are based on WS activities.
+   9. Front display new data.\
+      &nbsp;&nbsp; ↓
+   10. SSE Closes.\
+       _Later updates are based on WS activities._
 
-2. **Get List by ID**\
-   Front sends `GET` request\
-    &nbsp;&nbsp; ↓\
-   List is fetched from Redis based on ID.\
-    &nbsp;&nbsp; ↓\
-   List returns to Front, with all metadata and items metadata.\
-    &nbsp;&nbsp; ↓\
-   Front displays list
+2. **Get List by ID**
 
-3. **Update List / Item**\
-   Front sends `POST` request\
-    &nbsp;&nbsp; ↓\
-   List / Item is updated on Redis
-   &nbsp;&nbsp; ↓\
-    Kafka
+   1. Front sends `GET` request\
+      &nbsp;&nbsp; ↓
+   2. List is fetched from Redis based on ID.\
+      &nbsp;&nbsp; ↓
+   3. List returns to Front, with all metadata and items metadata.\
+      &nbsp;&nbsp; ↓
+   4. Front displays list
+
+3. **Update List / Item**
+
+   1. Front sends `POST` request\
+      &nbsp;&nbsp; ↓
+   2. List / Item is updated on Redis.\
+      **For items** - when version number is lower than what's on Redis, new item is created instead of modification of existing item.\
+      &nbsp;&nbsp; ↓
+   3. Update is broadcasted to all room members\
+      &nbsp;&nbsp; ↓
+   4. Front displays update.\
+      **Note** - for the user who made the update, it displayed before being broadcasted. If there is a problem, silent retry and backup in localhost.
+
+4. **Share List**
+   1. Front sends `POST` request with all userIDs and unrecognized phone numbers\
+      &nbsp;&nbsp; ↓
+   2.
 
 ### Chat
 
