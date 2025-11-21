@@ -163,7 +163,8 @@ Manages users, user data, user settings
       &nbsp;&nbsp; ↓
    4. Front displays update.
       > [!Note]
-      > for the user who made the update, it displayed before being broadcasted. If there is a problem, silent retry and backup in localhost.
+      >
+      > For the user who made the update, it displayed before being broadcasted. If there is a problem, silent retry and backup in localhost.
 
 &nbsp;
 
