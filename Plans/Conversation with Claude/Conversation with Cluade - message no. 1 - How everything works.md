@@ -1,4 +1,4 @@
-<img src="../../Architecture/Current/ShopList Architecture v1.1.drawio.svg"/>
+<img src="../../Architecture/Old/V1/ShopList Architecture v1.drawio.png"/>
 
 Take a look over this graph. It is the current architecture of ShopList.
 
