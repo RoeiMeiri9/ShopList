@@ -1,6 +1,6 @@
 <mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.0.3 Chrome/140.0.7339.249 Electron/38.7.0 Safari/537.36" version="29.0.3">
   <diagram name="‫עמוד-1‬" id="LgIQqKGK6uFuvCf-yWlB">
-    <mxGraphModel dx="369" dy="233" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="376" pageHeight="476" background="none" math="0" shadow="0">
+    <mxGraphModel dx="1107" dy="698" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="376" pageHeight="476" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -371,7 +371,7 @@
         <mxCell id="bq4fzCWn52Ya3wZjF1Ge-64" value="&lt;font color=&quot;#000000&quot;&gt;Scoring&lt;/font&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;rotation=0;fillColor=light-dark(#0050EF,#6DB2FF);strokeColor=light-dark(#001DBC,#B2CBFF);fontColor=#ffffff;" parent="bq4fzCWn52Ya3wZjF1Ge-67" vertex="1">
           <mxGeometry x="29.99000000000001" y="270" width="120" height="80" as="geometry" />
         </mxCell>
-        <mxCell id="bq4fzCWn52Ya3wZjF1Ge-65" value="&lt;font color=&quot;#000000&quot;&gt;Keyword &lt;br&gt;Manager&lt;br&gt;&lt;/font&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;rotation=0;fillColor=#d80073;strokeColor=#A50040;fontColor=#ffffff;" parent="bq4fzCWn52Ya3wZjF1Ge-67" vertex="1">
+        <mxCell id="bq4fzCWn52Ya3wZjF1Ge-65" value="&lt;font color=&quot;#000000&quot;&gt;Product History Manager&lt;/font&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;rotation=0;fillColor=#d80073;strokeColor=#A50040;fontColor=#ffffff;" parent="bq4fzCWn52Ya3wZjF1Ge-67" vertex="1">
           <mxGeometry x="29.99000000000001" y="160" width="120" height="80" as="geometry" />
         </mxCell>
         <mxCell id="TM_HfIyaRAzdXWtlQ0HT-33" value="&lt;font style=&quot;color: light-dark(rgb(0, 0, 0), rgb(0, 0, 0));&quot;&gt;Message&lt;br&gt;Analyzer&lt;br&gt;&lt;/font&gt;" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;rotation=0;fillColor=#FF90F3;strokeColor=#FFA9E0;fontColor=#ffffff;" parent="bq4fzCWn52Ya3wZjF1Ge-67" vertex="1">
@@ -586,7 +586,7 @@
             <mxPoint x="-22" y="1" as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="Zmj1_SWHxW_ndm0shrdq-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fillColor=#60a917;strokeColor=#2D7600;" edge="1" parent="1" source="TM_HfIyaRAzdXWtlQ0HT-14" target="bq4fzCWn52Ya3wZjF1Ge-88">
+        <mxCell id="Zmj1_SWHxW_ndm0shrdq-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fillColor=#60a917;strokeColor=#2D7600;" parent="1" source="TM_HfIyaRAzdXWtlQ0HT-14" target="bq4fzCWn52Ya3wZjF1Ge-88" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="410" y="590" />

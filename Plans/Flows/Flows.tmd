@@ -1,0 +1,276 @@
+---
+variables:
+   app-name: "ShopList"
+   users-service: "Users Service"
+   auth-service: "Auth Service"
+   lists-service: "Lists Service"
+   chat-service: "Chat Service"
+   ws-service: "WebSocket Service"
+   db-writer-service: "DB Writer Service"
+   message-analyzer-service: "Message Analyzer Service"
+   product-history-manager: "Product History Manager Service"
+   scoring-service: "Scoring Service"
+   ai-suggestions: "AI Suggestions Service"
+   keyword-manager-service: "Keyword Manager Service"
+   sms-service: "SMS Service - _planned_"
+   front: "Front"
+   kafka: "Kafka"
+   redis: "Redis"
+   auth0: "Auth0"
+   nginx: "Ngnix"
+   db: "DB"
+   get: "GET"
+   post: "POST"
+   put: "PUT"
+   delete: "DELETE"
+   rest: "REST"
+   get-snippet: "`GET`"
+   post-snippet: "`POST`"
+   put-snippet: "`PUT`"
+   delete-snippet: "`DELETE`"
+   rest-snippet: "`REST`"
+---
+# {{app-name}} - Flows
+
+## Overview
+
+ShopList allows customers to collaborate on writing and managing Shop Lists.\
+As a B2B service, ShopList provides real-data based statistics. (Note - ask Eden to write something here....)
+
+For that reason, ShopList is divided into two parts:
+
+1. B2C - The known part of ShopList.
+2. B2B - Displaying statistics, based on users activities.
+
+> [!NOTE] All events are logged in {{kafka}}.
+> Each event has `type`, `data` and `state` to them.\
+> When failing service is reinitiated, it will look over all of the `"state": "started"` events, and retry them.
+>
+> For brevity, kafka logs are omitted from flow diagrams unless it plays a special role beyond standard logging.
+
+> [!NOTE] From {{redis}} to {{db}}
+> All writes on {{redis}} are followed with notifications in {{kafka}} for the {{db-writer-service}} to push update
+>
+> For brevity, update {{DB}} logs are omitted from flow diagram unless it plays a special role beyond standard role.
+>
+> See [{{db-writer-service}}](#db-writer) for implementation details.
+
+> [!NOTE]
+> For best visibility, open this MD file through Visual Studio Code, using the [Markdown Preview Enhanced](https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced)
+
+---
+
+## 1. B2C Flows
+
+This part is divided into 3 categories:
+
+1. **Base App** - consisting of `{{auth-service}}`, `{{users-service}}`, `{{lists-service}}`, `{{chat-service}}`, `{{db-writer-service}}`
+2. **Message Process** - `{{message-analyzer-service}}`, `{{product-history-manager}}`, `{{scoring-service}}`
+3. **AI Suggestions** - `{{ai-suggestions}}`, `{{keyword-manager-service}}`
+
+> [!NOTE] All {{rest}} request must have JWT
+> All {{rest}} API requests pass through {{nginx}}, which sends them to the {{auth-service}} for JWT token validation.\
+> Valid requests are modified to have `user_id` instead of JWT before forwarding to downstream services.
+>
+> For brevity, {{nginx}} is omitted from flow diagrams unless it plays a service-specific role beyond standard authentication.
+>
+> See [{{auth-service}}: JWT to `user_id` Flow](#authentication) for implementation details.
+
+## 1.1. Base App
+
+### {{auth-service}}
+
+Manages Login and JWTs
+
+1. **Login**
+
+   1. {{front}} redirect to {{auth0}}\
+      &nbsp;&nbsp; ↓
+   2. User Login\
+      &nbsp;&nbsp; ↓
+   3. JWT is sent to the {{auth-service}}\
+      &nbsp;&nbsp; ↓
+   4. _#FIGURE OUT WHATS NEXT_
+
+&nbsp;
+
+2. **JWT to `user_id`**
+   1. {{front}} sends {{rest-snippet}} request\
+      &nbsp;&nbsp; ↓
+   2. {{nginx}} extracts JWT\
+      &nbsp;&nbsp; ↓
+   3. {{auth-service}} validates JWT, returns `user_id`\
+      &nbsp;&nbsp; ↓
+   4. {{nginx}} adds `user_id` to headers\
+      &nbsp;&nbsp; ↓
+   5. Destination service receives request
+
+---
+
+### {{users-service}}
+
+Manages users, user data, user settings
+
+> [!NOTE]
+> This service will be divided into Users Manager and Settings Service, when more settings will be added.
+
+---
+
+### {{lists-service}}
+
+1. **Get Lists** - SSE
+
+   1. {{front}} sends {{get-snippet}} request\
+      &nbsp;&nbsp; ↓
+   2. Lists are fetched from {{redis}}.\
+      &nbsp;&nbsp; ↓
+   3. For every list, items are fetched from {{redis}} - 5 at most.\
+      &nbsp;&nbsp; ↓
+   4. Lists Service publishes event to Kafka, consumed by {{chat-service}}\
+      &nbsp;&nbsp; ↓
+   5. **First response is sent to {{front}}.**\
+      _Content of Response:_
+
+   ```JSON
+   [
+     {
+       "id": "",
+       "name": "",
+       "update time": "",
+       "silent": true,
+       "items": [
+         {
+           "id": "",
+           "content": "",
+           "checked": false
+         }
+       ]
+     }
+   ]
+   ```
+
+   6. Displayed in {{front}}
+      ***
+   7. {{chat-service}} read event from {{kafka}}\
+      &nbsp;&nbsp; ↓
+   8. {{chat-service}} fetches amount of unread messages for every list, and last message\
+      &nbsp;&nbsp; ↓
+   9. **Second response is sent to the front.**\
+      _Content of Response:_
+
+   ```JSON
+   [
+     {
+       "id": "",
+       "unread_messages": 0,
+       "last_message": ""
+     }
+   ]
+   ```
+
+   10. {{front}} display new data.\
+       &nbsp;&nbsp; ↓
+   11. SSE Closes.\
+        _Later updates are based on WS activities._
+
+&nbsp;
+
+2. **Get List by ID**
+
+   1. {{front}} sends {{get-snippet}} request\
+      &nbsp;&nbsp; ↓
+   2. List is fetched from {{redis}} based on ID.\
+      &nbsp;&nbsp; ↓
+   3. List returns to {{front}}, with all metadata and items metadata.\
+      &nbsp;&nbsp; ↓
+   4. {{front}} displays list
+
+&nbsp;
+
+3. **Update List / Item**
+
+   1. {{front}} sends {{post-snippet}} request\
+      &nbsp;&nbsp; ↓
+   2. List / Item is updated on {{redis}}.\
+      **For items** - when version number is lower than what's on {{redis}}, new item is created instead of modification of existing item.\
+      &nbsp;&nbsp; ↓
+   3. {{ws-service}} fetches the event from {{kafka}}\
+      &nbsp;&nbsp; ↓
+   4. Update is broadcasted to all room members\
+      &nbsp;&nbsp; ↓
+   5. {{front}} displays update.
+      > [!Note]
+      >
+      > For the user who made the update, it displayed before being broadcasted. If there is a problem, silent retry and backup in localhost.
+
+&nbsp;
+
+4. **Share List**
+
+   > [!Note] SMS not part of MVP
+   > Apart from mentioning the SMS Service, the current flow does not include the SMS path.
+
+   1. {{front}} sends {{post-snippet}} request with all userIDs and unrecognized phone numbers\
+      &nbsp;&nbsp; ↓
+   2. {{lists-service}} adds members to list\
+      &nbsp;&nbsp; ↓
+   3. {{lists-service}} publishes event to {{kafka}}, consumed by:
+
+      - {{chat-service}}
+      - {{sms-service}}
+
+      &nbsp;&nbsp; ↓
+
+   4. {{chat-service}} enters users to equivalent chat\
+      &nbsp;&nbsp; ↓
+   5. {{ws-service}} adds users to room\
+      &nbsp;&nbsp; ↓
+   6. {{lists-service}} publish event to {{kafka}}, consumed by {{ws-service}} with following data:
+
+   ```JSON
+    {
+      "user_id": [""],
+      "list": {
+        "id": "",
+        "name": "",
+        "update time": "",
+        "silent": false,
+        "items": [
+          {
+            "id": "",
+            "content": "",
+            "checked": false
+          }
+        ]
+      }
+    }
+   ```
+
+   7. {{ws-service}} consumes event from {{kafka}}, sends message to all users under `user_id`\
+      &nbsp;&nbsp; ↓
+   8. {{front}} displays new list
+
+&nbsp;
+
+5. **Remove List**
+   1. {{front}} sends {{delete-snippet}} request\
+      &nbsp;&nbsp; ↓
+   2. {{lists-service}}
+
+---
+
+### {{chat-service}}
+
+> [!Note]
+> Some of the flows are scattered across different services, as they are part of bigger flows.
+
+---
+
+### {{db-writer-service}}
+
+All Services are writing and reading from {{redis}}. Only the {{db-writer-service}} writes the {{db}}, and when {{redis}} is re-instantiate, this service puts relevant data in {{redis}}.
+
+The {{db-writer-service}} updates the {{db}} every 30sec.
+
+> [!NOTE]
+> This service may not be part of MVP

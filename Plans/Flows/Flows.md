@@ -17,11 +17,14 @@ For that reason, ShopList is divided into two parts:
 > For brevity, kafka logs are omitted from flow diagrams unless it plays a special role beyond standard logging.
 
 > [!NOTE] From Redis to DB
-> All writes on Redis are followed with notifications in kafka for the DB Writer to push update
+> All writes on Redis are followed with notifications in Kafka for the DB Writer Service to push update
 >
-> For brevity, update DB logs are omitted from flow diagram unless it plays a special role beyond standard role.
+> For brevity, update {{DB}} logs are omitted from flow diagram unless it plays a special role beyond standard role.
 >
-> See [DB Writer](#db-writer) for implementation details.
+> See [DB Writer Service](#db-writer) for implementation details.
+
+> [!NOTE]
+> For best visibility, open this MD file through Visual Studio Code, using the [Markdown Preview Enhanced](https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced)
 
 ---
 
@@ -29,21 +32,21 @@ For that reason, ShopList is divided into two parts:
 
 This part is divided into 3 categories:
 
-1. **Base App** - Auth, Users, Lists, Chat, DB Writer
-2. **Message Process** - Message Analyzer, Keyword Manager, Scoring
-3. **AI Suggestions** - AI Suggestion, Keyword Manager
+1. **Base App** - consisting of `Auth Service`, `Users Service`, `Lists Service`, `Chat Service`, `DB Writer Service`
+2. **Message Process** - `Message Analyzer Service`, `Product History Manager Service`, `Scoring Service`
+3. **AI Suggestions** - `AI Suggestions Service`, `Keyword Manager Service`
 
 > [!NOTE] All REST request must have JWT
-> All REST API requests pass through Nginx, which sends them to the Auth service for JWT token validation.\
+> All REST API requests pass through Ngnix, which sends them to the Auth Service for JWT token validation.\
 > Valid requests are modified to have `user_id` instead of JWT before forwarding to downstream services.
 >
-> For brevity, Nginx is omitted from flow diagrams unless it plays a service-specific role beyond standard authentication.
+> For brevity, Ngnix is omitted from flow diagrams unless it plays a service-specific role beyond standard authentication.
 >
-> See [Authentication: JWT to `user_id` Flow](#authentication) for implementation details.
+> See [Auth Service: JWT to `user_id` Flow](#authentication) for implementation details.
 
 ## 1.1. Base App
 
-### Authentication
+### Auth Service
 
 Manages Login and JWTs
 
@@ -53,26 +56,26 @@ Manages Login and JWTs
       &nbsp;&nbsp; ↓
    2. User Login\
       &nbsp;&nbsp; ↓
-   3. JWT is sent to the Auth\
+   3. JWT is sent to the Auth Service\
       &nbsp;&nbsp; ↓
    4. _#FIGURE OUT WHATS NEXT_
 
 &nbsp;
 
 2. **JWT to `user_id`**
-   1. Front sends REST request\
+   1. Front sends `REST` request\
       &nbsp;&nbsp; ↓
-   2. Nginx extracts JWT\
+   2. Ngnix extracts JWT\
       &nbsp;&nbsp; ↓
    3. Auth Service validates JWT, returns `user_id`\
       &nbsp;&nbsp; ↓
-   4. Nginx adds `user_id` to headers\
+   4. Ngnix adds `user_id` to headers\
       &nbsp;&nbsp; ↓
-   5. Destination Service receives request
+   5. Destination service receives request
 
 ---
 
-### Users
+### Users Service
 
 Manages users, user data, user settings
 
@@ -81,7 +84,7 @@ Manages users, user data, user settings
 
 ---
 
-### Lists
+### Lists Service
 
 1. **Get Lists** - SSE
 
@@ -91,9 +94,9 @@ Manages users, user data, user settings
       &nbsp;&nbsp; ↓
    3. For every list, items are fetched from Redis - 5 at most.\
       &nbsp;&nbsp; ↓
-   4. Lists Service Publishes event to Kafka, consumed by Chat Service\
+   4. Lists Service publishes event to Kafka, consumed by Chat Service\
       &nbsp;&nbsp; ↓
-   5. **First response is sent to front.**\
+   5. **First response is sent to Front.**\
       _Content of Response:_
 
    ```JSON
@@ -116,9 +119,9 @@ Manages users, user data, user settings
 
    6. Displayed in Front
       ***
-   7. Chat read event from Kafka\
+   7. Chat Service read event from Kafka\
       &nbsp;&nbsp; ↓
-   8. Chat fetches amount of unread messages for every list, and last message\
+   8. Chat Service fetches amount of unread messages for every list, and last message\
       &nbsp;&nbsp; ↓
    9. **Second response is sent to the front.**\
       _Content of Response:_
@@ -159,9 +162,11 @@ Manages users, user data, user settings
    2. List / Item is updated on Redis.\
       **For items** - when version number is lower than what's on Redis, new item is created instead of modification of existing item.\
       &nbsp;&nbsp; ↓
-   3. Update is broadcasted to all room members\
+   3. WebSocket Service fetches the event from Kafka\
       &nbsp;&nbsp; ↓
-   4. Front displays update.
+   4. Update is broadcasted to all room members\
+      &nbsp;&nbsp; ↓
+   5. Front displays update.
       > [!Note]
       >
       > For the user who made the update, it displayed before being broadcasted. If there is a problem, silent retry and backup in localhost.
@@ -175,9 +180,9 @@ Manages users, user data, user settings
 
    1. Front sends `POST` request with all userIDs and unrecognized phone numbers\
       &nbsp;&nbsp; ↓
-   2. List Service adds members to list\
+   2. Lists Service adds members to list\
       &nbsp;&nbsp; ↓
-   3. Publishes event to Kafka, consumed by:
+   3. Lists Service publishes event to Kafka, consumed by:
 
       - Chat Service
       - SMS Service - _planned_
@@ -186,20 +191,54 @@ Manages users, user data, user settings
 
    4. Chat Service enters users to equivalent chat\
       &nbsp;&nbsp; ↓
-   5. WS adds users to room
+   5. WebSocket Service adds users to room\
+      &nbsp;&nbsp; ↓
+   6. Lists Service publish event to Kafka, consumed by WebSocket Service with following data:
+
+   ```JSON
+    {
+      "user_id": [""],
+      "list": {
+        "id": "",
+        "name": "",
+        "update time": "",
+        "silent": false,
+        "items": [
+          {
+            "id": "",
+            "content": "",
+            "checked": false
+          }
+        ]
+      }
+    }
+   ```
+
+   7. WebSocket Service consumes event from Kafka, sends message to all users under `user_id`\
+      &nbsp;&nbsp; ↓
+   8. Front displays new list
+
+&nbsp;
+
+5. **Remove List**
+   1. Front sends `DELETE` request\
+      &nbsp;&nbsp; ↓
+   2. Lists Service
 
 ---
 
-### Chat
+### Chat Service
 
 > [!Note]
 > Some of the flows are scattered across different services, as they are part of bigger flows.
 
 ---
 
-### DB Writer
+### DB Writer Service
 
-All Services are writing and reading from Redis. Only the DB Writer writes the DB, and when Redis is re-instantiate, this service puts relevant data in Redis.
+All Services are writing and reading from Redis. Only the DB Writer Service writes the DB, and when Redis is re-instantiate, this service puts relevant data in Redis.
+
+The DB Writer Service updates the DB every 30sec.
 
 > [!NOTE]
 > This service may not be part of MVP
