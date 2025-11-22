@@ -19,7 +19,7 @@ For that reason, ShopList is divided into two parts:
 > [!NOTE] From Redis to DB
 > All writes on Redis are followed with notifications in Kafka for the DB Writer Service to push update
 >
-> For brevity, update {{DB}} logs are omitted from flow diagram unless it plays a special role beyond standard role.
+> For brevity, update DB logs are omitted from flow diagram unless it plays a special role beyond standard role.
 >
 > See [DB Writer Service](#db-writer) for implementation details.
 

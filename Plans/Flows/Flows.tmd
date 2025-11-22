@@ -51,7 +51,7 @@ For that reason, ShopList is divided into two parts:
 > [!NOTE] From {{redis}} to {{db}}
 > All writes on {{redis}} are followed with notifications in {{kafka}} for the {{db-writer-service}} to push update
 >
-> For brevity, update {{DB}} logs are omitted from flow diagram unless it plays a special role beyond standard role.
+> For brevity, update {{db}} logs are omitted from flow diagram unless it plays a special role beyond standard role.
 >
 > See [{{db-writer-service}}](#db-writer) for implementation details.
 
