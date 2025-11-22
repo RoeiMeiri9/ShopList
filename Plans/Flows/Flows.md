@@ -1,14 +1,22 @@
-# ShopList - Flows
+# CoList - Flows
 
 ## Overview
 
-ShopList allows customers to collaborate on writing and managing Shop Lists.\
-As a B2B service, ShopList provides real-data based statistics. (NOTE - ask Eden to write something here....)
+CoList is a collaborative platform that allows users to manage and share shopping lists.\
+CoList also offers a B2B service, providing statistics and insights based on real user data
 
-For that reason, ShopList is divided into two parts:
+To serve both individual and business needs, CoList is organized into two segments:
 
-1. B2C - The known part of ShopList.
-2. B2B - Displaying statistics, based on users activities.
+1. **B2C** - The consumer-facing part of CoList.
+2. **B2B** - Provides analytics and insights derived from user activity.
+
+Respectively, the flows below are organized into those categories too.
+
+&nbsp;
+
+## Notes
+
+Before continue, make sure you read the following notes:
 
 > [!NOTE]
 > **All events are logged in Kafka**
@@ -27,13 +35,24 @@ For that reason, ShopList is divided into two parts:
 > See [DB Writer Service](#db-writer-service) for implementation details.
 
 > [!NOTE]
+>
+> By default, `GET` requests return the full data.\
+> When tailored response is required, the flow defines a response template.
+
+> [!NOTE]
 > For best visibility, open this MD file through Visual Studio Code, using the [Markdown Preview Enhanced](https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced)
+
+&nbsp;
+
+## Architecture
+
+![ShopList Architecture v1.1](../../Architecture/Current/ShopList-Architecture-v1.1.drawio.svg)
 
 &nbsp;
 
 ## 1. B2C Flows
 
-This part is divided into 3 categories:
+This part is organized into 3 categories:
 
 1. **Base App** - consisting of `Auth Service`, `Users Service`, `Lists Service`, `Chat Service`, `DB Writer Service`
 2. **Message Process** - `Message Analyzer Service`, `Product History Manager Service`, `Scoring Service`
