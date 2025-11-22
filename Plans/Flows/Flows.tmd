@@ -34,12 +34,12 @@ variables:
 
 ## Overview
 
-ShopList allows customers to collaborate on writing and managing Shop Lists.\
-As a B2B service, ShopList provides real-data based statistics. (Note - ask Eden to write something here....)
+{{app-name}} allows customers to collaborate on writing and managing Shop Lists.\
+As a B2B service, {{app-name}} provides real-data based statistics. (Note - ask Eden to write something here....)
 
-For that reason, ShopList is divided into two parts:
+For that reason, {{app-name}} is divided into two parts:
 
-1. B2C - The known part of ShopList.
+1. B2C - The known part of {{app-name}}.
 2. B2B - Displaying statistics, based on users activities.
 
 > [!NOTE] All events are logged in {{kafka}}.
