@@ -1,35 +1,36 @@
 ---
 variables:
-   app-name: "ShopList"
-   users-service: "Users Service"
-   auth-service: "Auth Service"
-   lists-service: "Lists Service"
-   chat-service: "Chat Service"
-   ws-service: "WebSocket Service"
-   db-writer-service: "DB Writer Service"
-   message-analyzer-service: "Message Analyzer Service"
-   product-history-manager: "Product History Manager Service"
-   scoring-service: "Scoring Service"
-   ai-suggestions: "AI Suggestions Service"
-   keyword-manager-service: "Keyword Manager Service"
-   sms-service: "SMS Service - _planned_"
-   front: "Front"
-   kafka: "Kafka"
-   redis: "Redis"
-   auth0: "Auth0"
-   nginx: "Ngnix"
-   db: "DB"
-   get: "GET"
-   post: "POST"
-   put: "PUT"
-   delete: "DELETE"
-   rest: "REST"
-   get-snippet: "`GET`"
-   post-snippet: "`POST`"
-   put-snippet: "`PUT`"
-   delete-snippet: "`DELETE`"
-   rest-snippet: "`REST`"
+  app-name: "ShopList"
+  users-service: "Users Service"
+  auth-service: "Auth Service"
+  lists-service: "Lists Service"
+  chat-service: "Chat Service"
+  ws-service: "WebSocket Service"
+  db-writer-service: "DB Writer Service"
+  message-analyzer-service: "Message Analyzer Service"
+  product-history-manager: "Product History Manager Service"
+  scoring-service: "Scoring Service"
+  ai-suggestions: "AI Suggestions Service"
+  keyword-manager-service: "Keyword Manager Service"
+  sms-service: "SMS Service - _planned_"
+  front: "Front"
+  kafka: "Kafka"
+  redis: "Redis"
+  auth0: "Auth0"
+  nginx: "Ngnix"
+  db: "DB"
+  get: "GET"
+  post: "POST"
+  put: "PUT"
+  delete: "DELETE"
+  rest: "REST"
+  get-snippet: "`GET`"
+  post-snippet: "`POST`"
+  put-snippet: "`PUT`"
+  delete-snippet: "`DELETE`"
+  rest-snippet: "`REST`"
 ---
+
 # {{app-name}} - Flows
 
 ## Overview
@@ -83,7 +84,6 @@ This part is divided into 3 categories:
 Manages Login and JWTs
 
 1. **Login**
-
    1. {{front}} redirect to {{auth0}}\
       &nbsp;&nbsp; ↓
    2. User Login\
@@ -119,7 +119,6 @@ Manages users, user data, user settings
 ### {{lists-service}}
 
 1. **Get Lists** - SSE
-
    1. {{front}} sends {{get-snippet}} request\
       &nbsp;&nbsp; ↓
    2. Lists are fetched from {{redis}}.\
@@ -176,7 +175,6 @@ Manages users, user data, user settings
 &nbsp;
 
 2. **Get List by ID**
-
    1. {{front}} sends {{get-snippet}} request\
       &nbsp;&nbsp; ↓
    2. List is fetched from {{redis}} based on ID.\
@@ -188,7 +186,6 @@ Manages users, user data, user settings
 &nbsp;
 
 3. **Update List / Item**
-
    1. {{front}} sends {{post-snippet}} request\
       &nbsp;&nbsp; ↓
    2. List / Item is updated on {{redis}}.\
@@ -209,13 +206,11 @@ Manages users, user data, user settings
 
    > [!Note] SMS not part of MVP
    > Apart from mentioning the SMS Service, the current flow does not include the SMS path.
-
    1. {{front}} sends {{post-snippet}} request with all userIDs and unrecognized phone numbers\
       &nbsp;&nbsp; ↓
    2. {{lists-service}} adds members to list\
       &nbsp;&nbsp; ↓
    3. {{lists-service}} publishes event to {{kafka}}, consumed by:
-
       - {{chat-service}}
       - {{sms-service}}
 
