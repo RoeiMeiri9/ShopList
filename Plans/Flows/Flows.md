@@ -35,6 +35,12 @@ Before continue, make sure you read the following notes:
 > See [DB Writer Service](#db-writer-service) for implementation details.
 
 > [!NOTE]
+> **Scattered flows!**
+>
+> Some flows are distributed across multiple services because they are part of larger, overarching flows.\
+> If you can’t find a sub-flow in one place, try searching within the larger flows it may belong to.
+
+> [!NOTE]
 >
 > By default, `GET` requests return the full data.\
 > When tailored response is required, the flow defines a response template.
@@ -86,7 +92,7 @@ Manages Login and JWTs
    3. JWT is sent to the Auth Service
       \
       &nbsp;&nbsp; ↓
-   4. _#FIGURE OUT WHATS NEXT_
+   4. ==_#FIGURE OUT WHATS NEXT_==
 
 &nbsp;
 
@@ -386,9 +392,6 @@ Manages users, user data, user settings
 &nbsp;
 
 ### Chat Service
-
-> [!NOTE]
-> Some of the flows are scattered across different services, as they are part of bigger flows.
 
 &nbsp;
 
