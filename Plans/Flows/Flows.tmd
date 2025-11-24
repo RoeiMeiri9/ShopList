@@ -10,8 +10,8 @@ variables:
   message-analyzer-service: _Message Analyzer Service_
   keyword-manager-service: _Keyword Manager Service_
   scoring-service: _Scoring Service_
-  ai-suggestions: _AI Suggestions Service_
-  product-history-manager: _Product History Manager Service_
+  ai-suggestions-service: _AI Suggestions Service_
+  product-history-manager-service: _Product History Manager Service_
   sms-service: _SMS Service (planned)_
   async-operation: (not affecting flow)
   front: _Front_
@@ -109,9 +109,21 @@ Before continue, make sure you read the following notes:
 
 This part is organized into 3 categories:
 
-1. **Base App** - consisting of `{{auth-service}}`, `{{users-service}}`, `{{lists-service}}`, `{{chat-service}}`, `{{db-writer-service}}`
-2. **Message Process** - `{{message-analyzer-service}}`, `{{keyword-manager-service}}`, `{{scoring-service}}`
-3. **AI Suggestions** - `{{ai-suggestions}}`, `{{product-history-manager}}`
+1. **Base App** - consisting of:
+   1. [{{auth-service}}](#auth-service)
+   2. [{{users-service}}](#users-service)
+   3. [{{lists-service}}](#lists-service)
+   4. [{{chat-service}}](#chat-service)
+   5. [{{db-writer-service}}](#db-writer-service)
+
+2. **Message Process** - consisting of:
+   1. [{{message-analyzer-service}}](#message-analyzer-service)
+   2. [{{keyword-manager-service}}](#keyword-manager-service)
+   3. [{{scoring-service}}](#scoring-service)
+
+3. **AI Suggestions** - consisting of:
+   1. [{{ai-suggestions-service}}](#ai-suggestions-service)
+   2. [{{product-history-manager-service}}](#product-history-manager-service)
 
 > [!NOTE]
 >
@@ -254,7 +266,7 @@ Manages users, user data, user settings
     6. {{chat-service}} removes all of the associated chats, including the messages there were sent, if any, from {{redis}}.\
        (All of the messages sent by the removed user that are not part of unshared lists are saved though).
        {{↓}}
-    7. {{product-history-manager}} removes the list of latest items from {{redis}}
+    7. {{product-history-manager-service}} removes the list of latest items from {{redis}}
        {{↓}}
     8. {{ws-service}} removes the user from all of the rooms he's in.
        {{↓}}

@@ -64,9 +64,21 @@ Before continue, make sure you read the following notes:
 
 This part is organized into 3 categories:
 
-1. **Base App** - consisting of `_Auth Service_`, `_Users Service_`, `_Lists Service_`, `_Chat Service_`, `_DB Writer Service_`
-2. **Message Process** - `_Message Analyzer Service_`, `_Keyword Manager Service_`, `_Scoring Service_`
-3. **AI Suggestions** - `_AI Suggestions Service_`, `_Product History Manager Service_`
+1. **Base App** - consisting of:
+   1. [_Auth Service_](#auth-service)
+   2. [_Users Service_](#users-service)
+   3. [_Lists Service_](#lists-service)
+   4. [_Chat Service_](#chat-service)
+   5. [_DB Writer Service_](#db-writer-service)
+
+2. **Message Process** - consisting of:
+   1. [_Message Analyzer Service_](#message-analyzer-service)
+   2. [_Keyword Manager Service_](#keyword-manager-service)
+   3. [_Scoring Service_](#scoring-service)
+
+3. **AI Suggestions** - consisting of:
+   1. [_AI Suggestions Service_](#ai-suggestions-service)
+   2. [_Product History Manager Service_](#product-history-manager-service)
 
 > [!NOTE]
 >
