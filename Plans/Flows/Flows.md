@@ -263,8 +263,7 @@ Manages users, user data, user settings
 
 ### _Lists Service_
 
-1. **Get Lists** - _SSE_
-
+1. **Get Lists** - _SSE_\
    This flow is used in the Home Page and focused on minimal metadata and preview-display specific data
    1. _Front_ sends `GET` request
       \
@@ -465,8 +464,7 @@ Manages users, user data, user settings
 
 &nbsp;
 
-8. **Close List**
-
+8. **Close List**\
    This is different from removing the list. It leaves the list as it was.
    1. _Front_ sends `PUT` request
       \

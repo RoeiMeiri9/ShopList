@@ -277,8 +277,7 @@ Manages users, user data, user settings
 
 ### {{lists-service}}
 
-1. **Get Lists** - _SSE_
-
+1. **Get Lists** - _SSE_\
    This flow is used in the Home Page and focused on minimal metadata and preview-display specific data
    1. {{front}} sends {{get-snippet}} request
       {{↓}}
@@ -449,8 +448,7 @@ Manages users, user data, user settings
 
 {{space}}
 
-8. **Close List**
-
+8. **Close List**\
    This is different from removing the list. It leaves the list as it was.
    1. {{front}} sends {{put-snippet}} request
       {{↓}}
