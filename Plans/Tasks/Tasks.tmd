@@ -1,3 +1,27 @@
+---
+variables:
+  black: $\color{black}
+  white: $\color{white}
+  red: $\color{red}
+  green: $\color{green}
+  blue: $\color{blue}
+  cyan: $\color{cyan}
+  magenta: $\color{magenta}
+  yellow: $\color{yellow}
+  gray: $\color{gray}
+  dark-gray: $\color{darkgray}
+  light-gray: $\color{lightgray}
+  brown: $\color{brown}
+  lime: $\color{lime}
+  olive: $\color{olive}
+  orange: $\color{orange}
+  pink: $\color{pink}
+  purple: $\color{purple}
+  teal: $\color{teal}
+  violet: $\color{violet}
+  space: " - "
+---
+
 Tasks:
 
 1. Message Processor Overload
@@ -7,38 +31,38 @@ Tasks:
    - Scoring Service (handles voting on suggestions)
    - Keyword Manager Service (manages blacklist/product list)
 
-   $\color{green} Done!$
+   {{green}} Done!$
 
 2. Add kafka. Maybe replace Rabbit with it.\
    Every new process should be stored there, and every event that is related to one of the process will be stored next to it. When process is DONE, remove it. No need to remember everything forever. Complete log should be stored later in DataDog.
 
-   $\color{green} Done!$
+   {{green}} Done!$
 
 3. Add DataDog to store logs, which are the same events from kafka but that are not deleted until next month or so.
 
-   $\color{orange} WIP$
+   {{orange}} WIP$
 
 4. Go through the conversation with claude, and write down all of the tasks listed there.\
    Look through message no. 2, and no. 3.
    https://claude.ai/share/b840b907-9d24-42f1-8d36-b0fcde9a1bda
 
-   $\color{red} TODO - Make  -  sure  -  you  -  did  -  it!$
+   {{red}} TODO - Make {{space}} sure {{space}} you {{space}} did {{space}} it!$
 
 5. Add a new service - keyword manager. It will merge the products list with the preferences of everybody.
 
-   $\color{green} Done!$
+   {{green}} Done!$
 
 6. **12\. Statistics Service (Future)**\
    Good foresight to plan for it\
    **Suggestion:** Use event streaming (Kafka?) to feed it historical data\
    **Consider:** Read replicas for the DBs so analytics don't impact production
 
-   $\color{red} TODO$
+   {{red}} TODO$
 
 7. Document Flows
 
-   $\color{orange} WIP$
+   {{orange}} WIP$
 
 8. Add a sign up page in Figma
 
-   $\color{red} TODO$
+   {{red}} TODO$

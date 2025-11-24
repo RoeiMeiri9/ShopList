@@ -1,30 +1,32 @@
 ---
 variables:
-  app-name: "CoList"
-  users-service: "Users Service"
-  auth-service: "Auth Service"
-  lists-service: "Lists Service"
-  chat-service: "Chat Service"
-  ws-service: "WebSocket Service"
-  db-writer-service: "DB Writer Service"
-  message-analyzer-service: "Message Analyzer Service"
-  product-history-manager: "Product History Manager Service"
-  scoring-service: "Scoring Service"
-  ai-suggestions: "AI Suggestions Service"
-  keyword-manager-service: "Keyword Manager Service"
-  sms-service: "SMS Service - _planned_"
-  async-operation: "(not affecting flow)"
-  front: "Front"
-  kafka: "Kafka"
-  redis: "Redis"
-  auth0: "Auth0"
-  nginx: "Ngnix"
-  db: "DB"
-  get: "GET"
-  post: "POST"
-  put: "PUT"
-  delete: "DELETE"
-  rest: "REST"
+  app-name: CoList
+  users-service: _Users Service_
+  auth-service: _Auth Service_
+  lists-service: _Lists Service_
+  chat-service: _Chat Service_
+  ws-service: _WebSocket Service_
+  db-writer-service: _DB Writer Service_
+  message-analyzer-service: _Message Analyzer Service_
+  keyword-manager-service: _Keyword Manager Service_
+  scoring-service: _Scoring Service_
+  ai-suggestions: _AI Suggestions Service_
+  product-history-manager: _Product History Manager Service_
+  sms-service: _SMS Service (planned)_
+  async-operation: (not affecting flow)
+  front: _Front_
+  kafka: _Kafka_
+  redis: _Redis_
+  auth0: _Auth0_
+  nginx: _Ngnix_
+  db: _DB_
+  ws-connection: WS Connection
+  ws-message: WS Message
+  get: GET
+  post: POST
+  put: PUT
+  delete: DELETE
+  rest: REST
   get-snippet: "`GET`"
   post-snippet: "`POST`"
   put-snippet: "`PUT`"
@@ -33,7 +35,12 @@ variables:
   user-id: "`user_id`"
   ↓: "\\\r\n      &nbsp;&nbsp; ↓"
   _↓: "&nbsp;&nbsp; ↓"
+  after-awhile: "\\\r\n      &nbsp;&nbsp; ..."
   space: "&nbsp;"
+  removed_account: "[Removed Account]"
+  removed: "`removed`"
+  true: "`True`"
+  false: "`True`"
 ---
 
 # {{app-name}} - Flows
@@ -57,6 +64,7 @@ Respectively, the flows below are organized into those categories too.
 Before continue, make sure you read the following notes:
 
 > [!NOTE]
+>
 > **All events are logged in {{kafka}}**
 >
 > Each event has `type`, `data` and `state` to them.\
@@ -65,6 +73,7 @@ Before continue, make sure you read the following notes:
 > For brevity, kafka logs are omitted from flow diagrams unless it plays a special role beyond standard logging.
 
 > [!NOTE]
+>
 > **From {{redis}} to {{db}}**
 >
 > All writes on {{redis}} are followed with notifications in {{kafka}} for the {{db-writer-service}} to push update
@@ -73,6 +82,7 @@ Before continue, make sure you read the following notes:
 > See [{{db-writer-service}}](#db-writer-service) for implementation details.
 
 > [!NOTE]
+>
 > **Scattered flows!**
 >
 > Some flows are distributed across multiple services because they are part of larger, overarching flows.\
@@ -84,6 +94,7 @@ Before continue, make sure you read the following notes:
 > When tailored response is required, the flow defines a response template.
 
 > [!NOTE]
+>
 > For best visibility, open this MD file through Visual Studio Code, using the [Markdown Preview Enhanced](https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced)
 
 {{space}}
@@ -99,10 +110,11 @@ Before continue, make sure you read the following notes:
 This part is organized into 3 categories:
 
 1. **Base App** - consisting of `{{auth-service}}`, `{{users-service}}`, `{{lists-service}}`, `{{chat-service}}`, `{{db-writer-service}}`
-2. **Message Process** - `{{message-analyzer-service}}`, `{{product-history-manager}}`, `{{scoring-service}}`
-3. **AI Suggestions** - `{{ai-suggestions}}`, `{{keyword-manager-service}}`
+2. **Message Process** - `{{message-analyzer-service}}`, `{{keyword-manager-service}}`, `{{scoring-service}}`
+3. **AI Suggestions** - `{{ai-suggestions}}`, `{{product-history-manager}}`
 
 > [!NOTE]
+>
 > **All {{rest}} request must have JWT**
 >
 > All {{rest}} API requests pass through {{nginx}}, which sends them to the {{auth-service}} for JWT token validation.\
@@ -127,7 +139,7 @@ Manages Login and JWTs
       {{↓}}
    3. JWT is sent to the {{auth-service}}
       {{↓}}
-   4. ==_#FIGURE OUT WHATS NEXT_==
+   - [ ] ==_TODO: FIGURE OUT WHATS NEXT_==
 
 {{space}}
 
@@ -149,9 +161,11 @@ Manages Login and JWTs
 Manages users, user data, user settings
 
 > [!NOTE]
+>
 > This service will be divided into Users Manager and Settings Service, when more settings will be added.
 
 > [!NOTE]
+>
 > As {{auth-service}} is yet to be realized, flows might change in the future.
 
 1. **Get Users / Setting**
@@ -175,6 +189,11 @@ Manages users, user data, user settings
 {{space}}
 
 3. **Update user / users / settings / setting**
+
+   > [!NOTE]
+   >
+   > No setting is sent through the {{ws-service}} to others.\
+   > Updates in settings that are affecting others, for example `seen`, will affect others after they will do a new {{rest-snippet}} request
    1. {{front}} sends a {{put-snippet}} request
       {{↓}}
    2. {{users-service}} update user details in {{redis}}.
@@ -194,7 +213,7 @@ Manages users, user data, user settings
    > This is part 1 of the combined flow for getting user status
    1. When user enters the app, the {{front}} receives all user details (see flow above).
       {{↓}}
-   2. If allowed, and when WS connection is open, {{front}} sends a WS Message that the user's connected
+   2. If allowed, and when {{ws-connection}} is open, {{front}} sends a {{ws-message}} that the user's connected
       {{↓}}
    3. {{ws-service}} broadcast the message through all of the rooms the user is part of
       {{↓}}
@@ -206,6 +225,53 @@ Manages users, user data, user settings
 
    This flow is part of a bigger flow of getting list settings.\
    See [{{lists-service}} flows](#list-settings) for details
+
+{{space}}
+
+6.  **Remove User**
+    - **What will be removed:**
+      1. All personal details, settings, and unshared lists.
+      2. User data from {{auth0}}
+
+    - **What will stay:**
+      1. {{user-id}} (and {{removed}} toggle will be on)
+      2. All of the shared lists, closed or open. (Creator will be displayed as {{removed_account}})
+      3. Every mention of the user will display {{removed_account}}\
+         {{space}}
+    1.  {{front}} sends a {{delete-snippet}} request
+        {{↓}}
+    2.  {{users-service}} removes all of the details about the user, except it's {{user-id}} from {{redis}}.\
+        Toggles the {{removed}} value to {{true}}
+        {{↓}}
+    3.  If GDPR allows, stores single value for later reconnect the user to existing data.\
+        {{users-service}} fetches this data from {{auth0}}
+    - [ ] ==_TODO: Check GDPR Guides_==
+          {{↓}}
+    4. {{auth-service}} removes user from {{auth0}}
+       {{↓}}
+    5. {{lists-service}} removes all of the associated lists that were not shared, including all associated items from {{redis}}.
+       {{↓}}
+    6. {{chat-service}} removes all of the associated chats, including the messages there were sent, if any, from {{redis}}.\
+       (All of the messages sent by the removed user that are not part of unshared lists are saved though).
+       {{↓}}
+    7. {{product-history-manager}} removes the list of latest items from {{redis}}
+       {{↓}}
+    8. {{ws-service}} removes the user from all of the rooms he's in.
+       {{↓}}
+    9. {{users-service}} returns an `operation succeeded` result to the {{front}}
+       {{↓}}
+    10. {{front}} display the Sign Up page.
+
+{{space}}
+
+7. **Logout**
+   1. {{front}} removes identification details from localhost
+      {{↓}}
+   2. {{ws-service}} removes the user from all of his rooms
+      {{↓}}
+   - [ ] ==_TODO: FIGURE OUT WHATS NEXT_==
+         {{↓}}
+   3. {{front}} displays Login Screen
 
 {{space}}
 
@@ -280,7 +346,20 @@ Manages users, user data, user settings
 
 {{space}}
 
-3. **Update List / Item / List Setting**
+3. **Create new list**
+   1. {{front}} sends a {{post-snippet}} request
+      {{↓}}
+   2. {{lists-service}} creates a new empty list in {{redis}}
+      {{↓}}
+   3. {{chat-service}} creates a new chat room
+      {{↓}}
+   4. {{ws-service}} enters the user to associated room
+      {{↓}}
+   5. {{front}} displays the new list
+
+{{space}}
+
+4. **Update List / Item / List Setting**
    1. {{front}} sends {{post-snippet}} request
       {{↓}}
    2. List / Item is updated on {{redis}}.\
@@ -297,7 +376,7 @@ Manages users, user data, user settings
 
 {{space}}
 
-4. **Share List**
+5. **Share List**
 
    > [!NOTE]
    > **SMS not part of MVP**
@@ -344,7 +423,7 @@ Manages users, user data, user settings
 
 {{space}}
 
-5. **Remove List**
+6. **Remove List**
    1. {{front}} sends {{delete-snippet}} request
       {{↓}}
    2. {{lists-service}} removes list and items from {{redis}}
@@ -357,18 +436,18 @@ Manages users, user data, user settings
 
 {{space}}
 
-6. **Close List**
+7. **Close List**
 
    This is different from removing the list. It leaves the list as it was.
    1. {{front}} sends {{put-snippet}} request
       {{↓}}
    2. {{lists-service}} changes the `state` in the `list_id` to `closed`
       {{↓}}
-   3. {{ws-service}} keeps the users in the room, but it stops accepting any WS Message that is not "list is not open anymore"
+   3. {{ws-service}} keeps the users in the room, but it stops accepting any {{ws-message}} that is not "list is not open anymore"
 
 {{space}}
 
-7. **Get list settings**<span id="list-settings"></span>
+8. **Get list settings**<span id="list-settings"></span>
    1. {{front}} sends a {{get-snippet}} request with list of users with undefined connection status
       {{↓}}
    2. {{lists-service}} fetches data from {{redis}}
@@ -383,6 +462,39 @@ Manages users, user data, user settings
 
 ### {{chat-service}}
 
+1. **Send message**
+   ![Flow Diagram](./Diagrams/Chat_Service_-_Send_Message.drawio.svg)
+   1. {{front}} sends message through {{ws-connection}}
+      {{↓}}
+   2. {{ws-connection}} provides the message to the {{chat-service}}, while broadcasting it to all of the room members
+      {{↓}}
+   3. {{chat-service}} writes all of the messages in {{redis}}
+      {{↓}}
+   4. The {{front}} of all of the listeners receives the message, and ping the {{ws-service}}
+      {{↓}}
+   5. The {{ws-service}} provides the ping messages to the {{chat-service}}
+      {{after-awhile}}
+   6. For every user who sees the message (enters viewable area in {{front}}), {{front}} sends `seen` {{ws-message}}
+      {{↓}}
+   7. The {{ws-service}} provides the `seen` messages to {{chat-service}}
+      {{after-awhile}}
+   8. When {{chat-service}} sees that all of the listeners received the message,\
+      it sends the sender a `received by all` {{ws-message}}.
+      {{after-awhile}}
+   9. When {{chat-service}} sees that all of the listeners saw the message,\
+      it sends the sender a `saw by all` {{ws-message}}.
+
+{{space}}
+
+2. **Edit message**
+   1. {{front}} sends new new message content through {{ws-connection}}
+      {{↓}}
+   2. {{ws-connection}} sends new content to all listeners and to {{chat-service}}
+      {{↓}}
+   3. {{chat-service}} stores new message content in {{redis}}
+      {{after-awhile}}
+   4. All listeners' {{front}} display new content
+
 {{space}}
 
 ### {{db-writer-service}}
@@ -393,4 +505,5 @@ The {{db-writer-service}} updates the {{db}} every 30sec.\
 For that reason, this is an async operation.
 
 > [!NOTE]
+>
 > This service may not be part of MVP
