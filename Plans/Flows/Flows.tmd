@@ -423,16 +423,22 @@ Manages users, user data, user settings
 
 {{space}}
 
-6. **Remove List**
+6. **Leave / Remove List**
    1. {{front}} sends {{delete-snippet}} request
       {{↓}}
-   2. {{lists-service}} removes list and items from {{redis}}
-      {{↓}}
-   3. {{chat-service}} removes chat and all of the message from {{redis}}
-      {{↓}}
-   4. {{db-writer-service}} updates {{db}} accordingly {{async-operation}}.
-      {{↓}}
-   5. {{ws-service}} removes all of the users from the equivalent room
+   2. If the user is the only member of the list:
+      1. The {{lists-service}} removes the list and all of the items from {{redis}}
+         {{↓}}
+      2. {{chat-service}} removes chat and all of the message from {{redis}}
+         {{↓}}
+      3. {{db-writer-service}} updates {{db}} accordingly {{async-operation}}.
+
+   3. If the user is **NOT** the only member of the list:
+      1. The {{lists-service}} removes the user from the list
+         {{↓}}
+      2. {{chat-service}} removes the user from the equivalent chat in {{redis}}
+
+   4. {{ws-service}} removes the user from the equivalent room
 
 {{space}}
 

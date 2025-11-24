@@ -432,20 +432,26 @@ Manages users, user data, user settings
 
 &nbsp;
 
-6. **Remove List**
+6. **Leave / Remove List**
    1. _Front_ sends `DELETE` request
       \
       &nbsp;&nbsp; ↓
-   2. _Lists Service_ removes list and items from _Redis_
-      \
+   2. If the user is the only member of the list:
+      1. The _Lists Service_ removes the list and all of the items from _Redis_
+         \
       &nbsp;&nbsp; ↓
-   3. _Chat Service_ removes chat and all of the message from _Redis_
-      \
+      2. _Chat Service_ removes chat and all of the message from _Redis_
+         \
       &nbsp;&nbsp; ↓
-   4. _DB Writer Service_ updates _DB_ accordingly (not affecting flow).
-      \
+      3. _DB Writer Service_ updates _DB_ accordingly (not affecting flow).
+
+   3. If the user is **NOT** the only member of the list:
+      1. The _Lists Service_ removes the user from the list
+         \
       &nbsp;&nbsp; ↓
-   5. _WebSocket Service_ removes all of the users from the equivalent room
+      2. _Chat Service_ removes the user from the equivalent chat in _Redis_
+
+   4. _WebSocket Service_ removes the user from the equivalent room
 
 &nbsp;
 
