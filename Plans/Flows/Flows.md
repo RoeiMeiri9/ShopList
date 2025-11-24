@@ -432,30 +432,40 @@ Manages users, user data, user settings
 
 &nbsp;
 
-6. **Leave / Remove List**
-   1. _Front_ sends `DELETE` request
+6. **Leave List**\
+   Relevant only if the user is **NOT** the only member of the list
+   1. _Front_ sends `PUT` request
       \
       &nbsp;&nbsp; ↓
-   2. If the user is the only member of the list:
-      1. The _Lists Service_ removes the list and all of the items from _Redis_
-         \
+   2. The _Lists Service_ removes the user from the list
+      \
       &nbsp;&nbsp; ↓
-      2. _Chat Service_ removes chat and all of the message from _Redis_
-         \
+   3. _Chat Service_ removes the user from the equivalent chat in _Redis_
+      \
       &nbsp;&nbsp; ↓
-      3. _DB Writer Service_ updates _DB_ accordingly (not affecting flow).
-
-   3. If the user is **NOT** the only member of the list:
-      1. The _Lists Service_ removes the user from the list
-         \
-      &nbsp;&nbsp; ↓
-      2. _Chat Service_ removes the user from the equivalent chat in _Redis_
-
    4. _WebSocket Service_ removes the user from the equivalent room
 
 &nbsp;
 
-7. **Close List**
+7. **Remove List**\
+   Relevant only if the user **IS THE ONLY MEMBER** of the list
+   1. _Front_ sends `DELETE` request
+      \
+      &nbsp;&nbsp; ↓
+   2. The _Lists Service_ removes the list and all of the items from _Redis_
+      \
+      &nbsp;&nbsp; ↓
+   3. _Chat Service_ removes chat and all of the message from _Redis_
+      \
+      &nbsp;&nbsp; ↓
+   4. _DB Writer Service_ updates _DB_ accordingly (not affecting flow).
+      \
+      &nbsp;&nbsp; ↓
+   5. _WebSocket Service_ removes the user from the equivalent room
+
+&nbsp;
+
+8. **Close List**
 
    This is different from removing the list. It leaves the list as it was.
    1. _Front_ sends `PUT` request
@@ -468,7 +478,7 @@ Manages users, user data, user settings
 
 &nbsp;
 
-8. **Get list settings**<span id="list-settings"></span>
+9. **Get list settings**<span id="list-settings"></span>
    1. _Front_ sends a `GET` request with list of users with undefined connection status
       \
       &nbsp;&nbsp; ↓
