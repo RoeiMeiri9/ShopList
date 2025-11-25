@@ -200,12 +200,12 @@ Manages users, user data, user settings
 
 {{space}}
 
-3. **Update user / users / settings / setting**
+3. **Update user / users**
 
    > [!NOTE]
    >
-   > No setting is sent through the {{ws-service}} to others.\
-   > Updates in settings that are affecting others, for example `seen`, will affect others after they will do a new {{rest-snippet}} request
+   > Settings are not shared with other users through the {{ws-connection}}.\
+   > Any setting changes that impact other users (such as the `seen` status) will only take effect for them once they perform a new {{rest-snippet}} request.
    1. {{front}} sends a {{put-snippet}} request
       {{↓}}
    2. {{users-service}} update user details in {{redis}}.
@@ -218,7 +218,27 @@ Manages users, user data, user settings
 
 {{space}}
 
-4. **Send connection status through {{ws-service}}**
+4. **Update setting**
+
+   > [!NOTE]
+   >
+   > Settings are not shared with other users through the {{ws-connection}}.\
+   > Any setting changes that impact other users (such as the `seen` status) will only take effect for them once they perform a new {{rest-snippet}} request.
+   1. {{front}} sends a {{put-snippet}} request
+      {{↓}}
+   2. {{users-service}} update setting in {{redis}}.
+      {{↓}}
+   3. {{db-writer-service}} updates details in {{db}} {{async-operation}}
+      {{↓}}
+   4. {{users-service}} sends `setting-updated` event to {{kafka}}.
+      {{↓}}
+   5. Relevant service fetches event from {{kafka}} and updates correlated setting in {{redis}}
+      {{↓}}
+   6. {{front}} receives a `succeeded` response
+
+{{space}}
+
+5. **Send connection status through {{ws-service}}**
 
    > [!NOTE]
    >
@@ -233,14 +253,14 @@ Manages users, user data, user settings
 
 {{space}}
 
-5. **Get User connection status**
+6. **Get User connection status**
 
    This flow is part of a bigger flow of getting list settings.\
    See [{{lists-service}} flows](#list-settings) for details
 
 {{space}}
 
-6.  **Remove User**
+7.  **Remove User**
     - **What will be removed:**
       1. All personal details, settings, and unshared lists.
       2. User data from {{auth0}}
@@ -276,7 +296,7 @@ Manages users, user data, user settings
 
 {{space}}
 
-7. **Logout**
+8. **Logout**
    1. {{front}} removes identification details from localhost
       {{↓}}
    2. {{ws-service}} removes the user from all of his rooms

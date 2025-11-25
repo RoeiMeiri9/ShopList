@@ -8,26 +8,26 @@ Based on our entire conversation, here's your comprehensive action plan organize
 
 ### 1. **Core Architecture Setup**
 
-- [ ] **Replace RabbitMQ with Kafka** for all service-to-service communication
+- [x] **Replace RabbitMQ with Kafka** for all service-to-service communication
   - Kafka will store complete event history
   - Set retention to 7 days minimum
   - Every connection between services goes through Kafka
 
 ### 2. **Database & Caching Strategy**
 
-- [ ] **Product List: Redis as primary, PostgreSQL as backup**
+- [x] **Product List: Redis as primary, PostgreSQL as backup**
   - Use Redis with AOF persistence (`appendfsync=everysec`)
   - Every score change → Kafka → DB Writer Service (batches every 30 seconds)
   - Use RediSearch module for fuzzy matching (no Python fuzzy search needed)
   - Implement stemming in RediSearch for "tomato/tomatoes/tomatos"
-- [ ] **User Preferences: Redis cache with Kafka sync**
+- [x] **User Preferences: Redis cache with Kafka sync**
 
   - Users Service publishes `user-updated` events to Kafka
   - All services consume and update Redis cache
   - Cache TTL: 5-10 minutes
   - Structure: `user:{user_id}:name`, `user:{user_id}:theme`, etc.
 
-- [ ] **User Deletion: Soft delete implementation**
+- [x] **User Deletion: Soft delete implementation**
   - Keep only user ID with `deleted: true` flag
   - Remove all personal data (GDPR compliant)
   - Display as "[deleted user]" in lists
@@ -35,7 +35,7 @@ Based on our entire conversation, here's your comprehensive action plan organize
 
 ### 3. **WebSocket Service**
 
-- [ ] **Use Node.js + Socket.IO** (NOT Django Channels)
+- [x] **Use Node.js + Socket.IO** (NOT Django Channels)
   - Each list = its own room
   - Handles: user status, chat, list updates, AI suggestions
   - Communicates with other services via Kafka
@@ -43,7 +43,7 @@ Based on our entire conversation, here's your comprehensive action plan organize
 
 ### 4. **Service Splitting**
 
-- [ ] **Split Message Processor into 3 services:**
+- [x] **Split Message Processor into 3 services:**
 
   1. **Message Analyzer Service**
 
@@ -97,11 +97,11 @@ Based on our entire conversation, here's your comprehensive action plan organize
 
 ### 8. **Chat-List Relationship**
 
-- [ ] Every list creates a chat automatically
-- [ ] Store `list_id` in Chat DB for relationship
-- [ ] **Delete list → delete chat** (Kafka ensures consistency)
-- [ ] No UI option to delete chat independently
-- [ ] Kafka retains event history (no need for chat backup)
+- [x] Every list creates a chat automatically
+- [x] Store `list_id` in Chat DB for relationship
+- [x] **Delete list → delete chat** (Kafka ensures consistency)
+- [x] No UI option to delete chat independently
+- [x] Kafka retains event history (no need for chat backup)
 
 ---
 
@@ -163,7 +163,7 @@ Based on our entire conversation, here's your comprehensive action plan organize
       proxy_pass http://backend;
   }
   ```
-- [ ] Create tiny Auth Service that validates JWT (returns 200/401)
+- [x] Create tiny Auth Service that validates JWT (returns 200/401)
 - [ ] SSL termination (Let's Encrypt)
 - [ ] Nginx blocks invalid requests before they hit services
 
@@ -311,9 +311,9 @@ Based on our entire conversation, here's your comprehensive action plan organize
 
 ### 23. **Repository Structure**
 
-- [ ] Monorepo for now (easier for resume/portfolio)
+- [x] Monorepo for now (easier for resume/portfolio)
 - [ ] Later: Split into microservice repos when team grows
-- [ ] Document architecture decisions (ADRs) in repo
+- [ ] Document architecture decisions (ADRs) in repo - **_WIP_**
 
 ---
 
@@ -387,7 +387,6 @@ Based on our entire conversation, here's your comprehensive action plan organize
 
 ### 30. **Query Optimization**
 
-- [ ] **Never trust Django ORM!** Always check query count
 - [ ] Use SQLAlchemy with explicit JOINs:
   ```python
   .options(selectinload(Item.added_by))  # Eager load

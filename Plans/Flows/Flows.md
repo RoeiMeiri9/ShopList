@@ -167,12 +167,12 @@ Manages users, user data, user settings
 
 &nbsp;
 
-3. **Update user / users / settings / setting**
+3. **Update user / users**
 
    > [!NOTE]
    >
-   > No setting is sent through the _WebSocket Service_ to others.\
-   > Updates in settings that are affecting others, for example `seen`, will affect others after they will do a new `REST` request
+   > Settings are not shared with other users through the WS Connection.\
+   > Any setting changes that impact other users (such as the `seen` status) will only take effect for them once they perform a new `REST` request.
    1. _Front_ sends a `PUT` request
       \
       &nbsp;&nbsp; ↓
@@ -189,7 +189,32 @@ Manages users, user data, user settings
 
 &nbsp;
 
-4. **Send connection status through _WebSocket Service_**
+4. **Update setting**
+
+   > [!NOTE]
+   >
+   > Settings are not shared with other users through the WS Connection.\
+   > Any setting changes that impact other users (such as the `seen` status) will only take effect for them once they perform a new `REST` request.
+   1. _Front_ sends a `PUT` request
+      \
+      &nbsp;&nbsp; ↓
+   2. _Users Service_ update setting in _Redis_.
+      \
+      &nbsp;&nbsp; ↓
+   3. _DB Writer Service_ updates details in _DB_ (not affecting flow)
+      \
+      &nbsp;&nbsp; ↓
+   4. _Users Service_ sends `setting-updated` event to _Kafka_.
+      \
+      &nbsp;&nbsp; ↓
+   5. Relevant service fetches event from _Kafka_ and updates correlated setting in _Redis_
+      \
+      &nbsp;&nbsp; ↓
+   6. _Front_ receives a `succeeded` response
+
+&nbsp;
+
+5. **Send connection status through _WebSocket Service_**
 
    > [!NOTE]
    >
@@ -207,14 +232,14 @@ Manages users, user data, user settings
 
 &nbsp;
 
-5. **Get User connection status**
+6. **Get User connection status**
 
    This flow is part of a bigger flow of getting list settings.\
    See [_Lists Service_ flows](#list-settings) for details
 
 &nbsp;
 
-6.  **Remove User**
+7.  **Remove User**
     - **What will be removed:**
       1. All personal details, settings, and unshared lists.
       2. User data from _Auth0_
@@ -259,7 +284,7 @@ Manages users, user data, user settings
 
 &nbsp;
 
-7. **Logout**
+8. **Logout**
    1. _Front_ removes identification details from localhost
       \
       &nbsp;&nbsp; ↓
