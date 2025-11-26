@@ -29,7 +29,7 @@ Before continue, make sure you read the following notes:
 
 > [!NOTE]
 >
-> **From _Redis_ to _DB_**
+> **From _Kafka_ to _DB_**
 >
 > All writes on _Redis_ are followed with notifications in _Kafka_ for the _DB Writer Service_ to push update
 >
@@ -66,8 +66,8 @@ Before continue, make sure you read the following notes:
 
 ## Architecture
 
-   <img src="../../Architecture/Current/ShopList-Architecture-v1.1.drawio.svg" alt="CoList Architecture v1.1">
-   <figcaption style="margin-top: 0.2rem; text-align: center; font-size: 0.90rem; opacity: 60%;"> CoList Architecture v1.1</figcaption>
+   <img src="../../Architecture/Current/ShopList-Architecture-v1.2.drawio.svg" alt="CoList Architecture v1.2">
+   <figcaption style="margin-top: 0.2rem; text-align: center; font-size: 0.90rem; opacity: 60%;"> CoList Architecture v1.2</figcaption>
 
 &nbsp;
 

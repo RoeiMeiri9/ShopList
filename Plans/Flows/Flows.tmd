@@ -82,7 +82,7 @@ Before continue, make sure you read the following notes:
 
 > [!NOTE]
 >
-> **From {{redis}} to {{db}}**
+> **From {{kafka}} to {{db}}**
 >
 > All writes on {{redis}} are followed with notifications in {{kafka}} for the {{db-writer-service}} to push update
 >
@@ -119,8 +119,8 @@ Before continue, make sure you read the following notes:
 
 ## Architecture
 
-   <img src="../../Architecture/Current/ShopList-Architecture-v1.1.drawio.svg" alt="{{app-name}} Architecture v1.1">
-   <figcaption style="{{caption-style}}"> {{app-name}} Architecture v1.1</figcaption>
+   <img src="../../Architecture/Current/ShopList-Architecture-v1.2.drawio.svg" alt="{{app-name}} Architecture v1.2">
+   <figcaption style="{{caption-style}}"> {{app-name}} Architecture v1.2</figcaption>
 
 {{space}}
 
