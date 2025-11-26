@@ -42,3 +42,5 @@ Tasks:
 8. Add a sign up page in Figma
 
    $\color{red} TODO$
+
+9. Read all of the conversation [here](https://chatgpt.com/share/69278556-74c0-8006-9154-70dc7853256e) and pull tasks from the conversation.

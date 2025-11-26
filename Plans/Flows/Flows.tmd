@@ -13,14 +13,14 @@ variables:
   ai-suggestions-service: _AI Suggestions Service_
   product-history-manager-service: _Product History Manager Service_
   sms-service: _SMS Service (planned)_
-  async-operation: (not affecting flow)
+  detached-from-flow: (detached from flow)
   front: _Front_
   kafka: _Kafka_
   redis: _Redis_
   auth0: _Auth0_
   nginx: _Ngnix_
   db: _DB_
-  ws-connection: WS Connection
+  ws-connection: "WS Connection"
   ws-message: WS Message
   get: GET
   post: POST
@@ -33,14 +33,22 @@ variables:
   delete-snippet: "`DELETE`"
   rest-snippet: "`REST`"
   user-id: "`user_id`"
-  ↓: "\\\r\n      &nbsp;&nbsp; ↓"
+  list-id: "`list-id`"
+  chat-id: "`chat-id`"
+  ↓: "\\\r\n      &nbsp;&nbsp; ↓\r\n"
   _↓: "&nbsp;&nbsp; ↓"
-  after-awhile: "\\\r\n      &nbsp;&nbsp; ..."
+  after-awhile: "\\\r\n      &nbsp;&nbsp; ...\r\n"
+  _after-awhile: "&nbsp;&nbsp; ..."
   space: "&nbsp;"
   removed_account: "[Removed Account]"
   removed: "`removed`"
   true: "`True`"
   false: "`True`"
+  sse: "- _SSE_\\"
+  sse_: "- _SSE_"
+  sse-close: "SSE Closes.\\\r\n_Later updates are based on WS activities._"
+  success-response: "receives a `succeeded` response"
+  caption-style: "margin-top: 0.2rem; text-align: center; font-size: 0.90rem; opacity: 60%;"
 ---
 
 # {{app-name}} - Flows
@@ -99,9 +107,20 @@ Before continue, make sure you read the following notes:
 
 {{space}}
 
+## Legend of symbols
+
+| Symbol                     | Meaning                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------- |
+| {{_↓}}                     | Comes after or as a result of the previous step.                                            |
+| {{_after-awhile}}          | Comes as a result of the previous step, but separated from the main flow.                   |
+| Horizontal separation line | Separated a good amount of steps ago from the main flow, and started a big flow of its own. |
+
+{{space}}
+
 ## Architecture
 
-![ShopList Architecture v1.1](../../Architecture/Current/ShopList-Architecture-v1.1.drawio.svg)
+   <img src="../../Architecture/Current/ShopList-Architecture-v1.1.drawio.svg" alt="{{app-name}} Architecture v1.1">
+   <figcaption style="{{caption-style}}"> {{app-name}} Architecture v1.1</figcaption>
 
 {{space}}
 
@@ -185,7 +204,7 @@ Manages users, user data, user settings
       {{↓}}
    2. {{users-service}} fetches users details from {{redis}}.
       {{↓}}
-   3. If type of detail is stored in {{auth0}}, {{auth-service}} fetches them.
+   3. If type of detail is stored in {{auth0}}, a {{get-snippet}} request is sent from the {{users-service}}.
       {{↓}}
    4. {{front}} receives users details in a list
 
@@ -208,13 +227,10 @@ Manages users, user data, user settings
    > Any setting changes that impact other users (such as the `seen` status) will only take effect for them once they perform a new {{rest-snippet}} request.
    1. {{front}} sends a {{put-snippet}} request
       {{↓}}
-   2. {{users-service}} update user details in {{redis}}.
+   2. {{users-service}} update user details in {{redis}}.\
+      If detail is not in {{redis}} but in {{auth0}}, updates it there.
       {{↓}}
-   3. {{db-writer-service}} updates details in {{db}} {{async-operation}}
-      {{↓}}
-   4. {{auth-service}} updates details in {{auth0}}
-      {{↓}}
-   5. {{front}} receives users details in an object
+   3. {{front}} receives users details in an object.
 
 {{space}}
 
@@ -228,13 +244,11 @@ Manages users, user data, user settings
       {{↓}}
    2. {{users-service}} update setting in {{redis}}.
       {{↓}}
-   3. {{db-writer-service}} updates details in {{db}} {{async-operation}}
+   3. {{users-service}} sends `setting-updated` event to {{kafka}}.
       {{↓}}
-   4. {{users-service}} sends `setting-updated` event to {{kafka}}.
-      {{↓}}
+   4. {{front}} {{success-response}}
+      {{after-awhile}}
    5. Relevant service fetches event from {{kafka}} and updates correlated setting in {{redis}}
-      {{↓}}
-   6. {{front}} receives a `succeeded` response
 
 {{space}}
 
@@ -250,6 +264,8 @@ Manages users, user data, user settings
    3. {{ws-service}} broadcast the message through all of the rooms the user is part of
       {{↓}}
    4. {{front}} receives message, and ignores it unless the user is currently displayed in the chat settings
+      {{after-awhile}}
+   5. {{users-service}} sets connection status flag in {{redis}}
 
 {{space}}
 
@@ -276,23 +292,23 @@ Manages users, user data, user settings
         Toggles the {{removed}} value to {{true}}
         {{↓}}
     3.  If GDPR allows, stores single value for later reconnect the user to existing data.\
-        {{users-service}} fetches this data from {{auth0}}
+         {{users-service}} fetches this data from {{auth0}}
+        {{↓}}
     - [ ] ==_TODO: Check GDPR Guides_==
-          {{↓}}
     4. {{auth-service}} removes user from {{auth0}}
        {{↓}}
-    5. {{lists-service}} removes all of the associated lists that were not shared, including all associated items from {{redis}}.
+    5. {{ws-service}} removes the user from all of the rooms he's in.
        {{↓}}
-    6. {{chat-service}} removes all of the associated chats, including the messages there were sent, if any, from {{redis}}.\
+    6. {{users-service}} returns an `operation succeeded` result to the {{front}}
+       {{↓}}
+    7. {{front}} display the Sign Up page.
+       {{after-awhile}}
+    8. {{lists-service}} removes all of the associated lists that were not shared, including all associated items from {{redis}}.
+       {{↓}}
+    9. {{chat-service}} removes all of the associated chats, including the messages there were sent, if any, from {{redis}}.\
        (All of the messages sent by the removed user that are not part of unshared lists are saved though).
        {{↓}}
-    7. {{product-history-manager-service}} removes the list of latest items from {{redis}}
-       {{↓}}
-    8. {{ws-service}} removes the user from all of the rooms he's in.
-       {{↓}}
-    9. {{users-service}} returns an `operation succeeded` result to the {{front}}
-       {{↓}}
-    10. {{front}} display the Sign Up page.
+    10. {{product-history-manager-service}} removes the list of latest items from {{redis}}
 
 {{space}}
 
@@ -309,7 +325,7 @@ Manages users, user data, user settings
 
 ### {{lists-service}}
 
-1. **Get Lists** - _SSE_\
+1. **Get Lists**<span id="get-lists"></span>{{sse}}
    This flow is used in the Home Page and focused on minimal metadata and preview-display specific data
    1. {{front}} sends {{get-snippet}} request
       {{↓}}
@@ -361,17 +377,16 @@ Manages users, user data, user settings
 
    10. {{front}} display new data.
        {{↓}}
-   11. SSE Closes.\
-       _Later updates are based on WS activities._
+   11. {{sse-close}}
 
 {{space}}
 
-2. **Get List by ID**
+2. **Get List by {{list-id}}**
    1. {{front}} sends {{get-snippet}} request
       {{↓}}
-   2. List is fetched from {{redis}} based on ID.
+   2. {{lists-service}} fetches list details and item list from {{redis}}.
       {{↓}}
-   3. List returns to {{front}}, with all metadata and items metadata.
+   3. {{lists-service}} returns the List to {{front}}, with all metadata and items metadata.
       {{↓}}
    4. {{front}} displays list
 
@@ -382,11 +397,11 @@ Manages users, user data, user settings
       {{↓}}
    2. {{lists-service}} creates a new empty list in {{redis}}
       {{↓}}
-   3. {{chat-service}} creates a new chat room
+   3. {{front}} displays the new list
+      {{after-awhile}}
+   4. {{chat-service}} creates a new chat for the associated list
       {{↓}}
-   4. {{ws-service}} enters the user to associated room
-      {{↓}}
-   5. {{front}} displays the new list
+   5. {{ws-service}} enters the user to associated room
 
 {{space}}
 
@@ -396,11 +411,9 @@ Manages users, user data, user settings
    2. List / Item is updated on {{redis}}.\
       **For items** - when version number is lower than what's on {{redis}}, new item is created instead of modification of existing item.
       {{↓}}
-   3. {{ws-service}} fetches the event from {{kafka}}
-      {{↓}}
-   4. Update is broadcasted to all room members
-      {{↓}}
-   5. {{front}} displays update.
+   3. {{front}} displays update.
+      {{after-awhile}}
+   4. {{ws-service}} broadcasting update / new item to all room members
       > [!NOTE]
       >
       > For the user who made the update, it displayed before being broadcasted. If there is a problem, silent retry and backup in localhost.
@@ -415,47 +428,29 @@ Manages users, user data, user settings
    > Apart from mentioning the SMS Service, the current flow does not include the SMS path.
    1. {{front}} sends {{post-snippet}} request with list of {{user-id}} and unrecognized phone numbers
       {{↓}}
-   2. {{lists-service}} adds members to list
+   2. {{lists-service}} adds members (who exists in the DB already) to list
       {{↓}}
-   3. {{lists-service}} publishes event to {{kafka}}, consumed by:
-      - {{chat-service}}
-      - {{sms-service}}
+   3. {{lists-service}} publishes events to {{kafka}}, consumed by:
+      - {{chat-service}} - adding existing users to chat
+      - {{sms-service}} - sending invitations to sing up to {{app-name}} and enter the list
+      - {{ws-service}} - list details (same structure as in the [get-lists flow](#get-lists))
 
       {{_↓}}
 
-   4. {{chat-service}} enters users to equivalent chat
+   4. {{front}} {{success-response}}
+      {{after-awhile}}
+   5. {{chat-service}} enters users to equivalent chat
       {{↓}}
-   5. {{ws-service}} adds users to room
+   6. {{ws-service}} adds users to room
       {{↓}}
-   6. {{lists-service}} publish event to {{kafka}}, consumed by {{ws-service}} with following data:
-
-   ```JSON
-   {
-      "user_id": [""],
-      "list": {
-         "id": "",
-         "name": "",
-         "update time": "",
-         "silent": false,
-         "items": [
-            {
-               "id": "",
-               "content": "",
-               "checked": false
-            }
-         ]
-      }
-   }
-   ```
-
-   7. {{ws-service}} consumes event from {{kafka}}, sends message to all users under `user_id`
+   7. {{ws-service}} sends list details for every new member (fetched from {{kafka}})
       {{↓}}
-   8. {{front}} displays new list
+   8. {{front}} (of new members) displays new list
 
 {{space}}
 
 6. **Leave List**\
-   Relevant only if the user is **NOT** the only member of the list
+    Relevant only if the user is **NOT** the only member of the list
    1. {{front}} sends {{put-snippet}} request
       {{↓}}
    2. The {{lists-service}} removes the user from the list
@@ -463,6 +458,8 @@ Manages users, user data, user settings
    3. {{chat-service}} removes the user from the equivalent chat in {{redis}}
       {{↓}}
    4. {{ws-service}} removes the user from the equivalent room
+      {{↓}}
+   5. {{front}} {{success-response}}
 
 {{space}}
 
@@ -472,9 +469,9 @@ Manages users, user data, user settings
       {{↓}}
    2. The {{lists-service}} removes the list and all of the items from {{redis}}
       {{↓}}
-   3. {{chat-service}} removes chat and all of the message from {{redis}}
-      {{↓}}
-   4. {{db-writer-service}} updates {{db}} accordingly {{async-operation}}.
+   3. {{front}} {{success-response}}
+      {{after-awhile}}
+   4. {{chat-service}} removes chat and all of the message from {{redis}}
       {{↓}}
    5. {{ws-service}} removes the user from the equivalent room
 
@@ -486,27 +483,46 @@ Manages users, user data, user settings
       {{↓}}
    2. {{lists-service}} changes the `state` in the `list_id` to `closed`
       {{↓}}
-   3. {{ws-service}} keeps the users in the room, but it stops accepting any {{ws-message}} that is not "list is not open anymore"
+   3. {{front}} {{success-response}}
+      {{after-awhile}}
+   4. {{ws-service}} keeps the users in the room, but it stops accepting any {{ws-message}} that is not "list is not closed anymore"
 
 {{space}}
 
-9. **Get list settings**<span id="list-settings"></span>
+9. **Get list settings**<span id="list-settings"></span> {{sse_}}
    1. {{front}} sends a {{get-snippet}} request with list of users with undefined connection status
       {{↓}}
    2. {{lists-service}} fetches data from {{redis}}
       {{↓}}
-   3. {{users-service}} fetches connection status for each user in the list settings
+   3. {{lists-service}} send response to front
       {{↓}}
-   4. {{lists-service}} send response to front
+   4. {{front}} displays data
+      {{after-awhile}}
+   5. {{users-service}} fetches connection status for each user in the list settings
       {{↓}}
-   5. {{front}} displays data
+   6. {{front}} displays data
+      {{↓}}
+   7. {{sse-close}}
 
 {{space}}
 
 ### {{chat-service}}
 
-1. **Send message**
-   ![Flow Diagram](./Diagrams/Chat_Service_-_Send_Message.drawio.svg)
+1. **Get Chat by {{chat-id}}**
+   1. {{front}} sends a {{get-snippet}} request
+      {{↓}}
+   2. {{chat-service}} fetches chat details from {{redis}}.
+      {{↓}}
+   3. {{front}} receives chat details and message in an object
+
+{{space}}
+
+2. **Send message**
+
+   <img src="./Diagrams/Chat_Service_-_Send_Message.drawio.svg" alt="Flow Diagram">
+   <figcaption style="{{caption-style}}; margin-bottom: -1.5rem">Representation of the flow</figcaption>
+
+   {{space}}
    1. {{front}} sends message through {{ws-connection}}
       {{↓}}
    2. {{ws-connection}} provides the message to the {{chat-service}}, while broadcasting it to all of the room members
@@ -529,7 +545,7 @@ Manages users, user data, user settings
 
 {{space}}
 
-2. **Edit message**
+3. **Edit message**
    1. {{front}} sends new new message content through {{ws-connection}}
       {{↓}}
    2. {{ws-connection}} sends new content to all listeners and to {{chat-service}}

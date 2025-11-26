@@ -54,9 +54,20 @@ Before continue, make sure you read the following notes:
 
 &nbsp;
 
+## Legend of symbols
+
+| Symbol                     | Meaning                                                                                     |
+| -------------------------- | ------------------------------------------------------------------------------------------- |
+| &nbsp;&nbsp; ↓                     | Comes after or as a result of the previous step.                                            |
+| &nbsp;&nbsp; ...          | Comes as a result of the previous step, but separated from the main flow.                   |
+| Horizontal separation line | Separated a good amount of steps ago from the main flow, and started a big flow of its own. |
+
+&nbsp;
+
 ## Architecture
 
-![ShopList Architecture v1.1](../../Architecture/Current/ShopList-Architecture-v1.1.drawio.svg)
+   <img src="../../Architecture/Current/ShopList-Architecture-v1.1.drawio.svg" alt="CoList Architecture v1.1">
+   <figcaption style="margin-top: 0.2rem; text-align: center; font-size: 0.90rem; opacity: 60%;"> CoList Architecture v1.1</figcaption>
 
 &nbsp;
 
@@ -103,12 +114,15 @@ Manages Login and JWTs
    1. _Front_ redirect to _Auth0_
       \
       &nbsp;&nbsp; ↓
+
    2. User Login
       \
       &nbsp;&nbsp; ↓
+
    3. JWT is sent to the _Auth Service_
       \
       &nbsp;&nbsp; ↓
+
    - [ ] ==_TODO: FIGURE OUT WHATS NEXT_==
 
 &nbsp;
@@ -117,15 +131,19 @@ Manages Login and JWTs
    1. _Front_ sends `REST` request
       \
       &nbsp;&nbsp; ↓
+
    2. _Ngnix_ extracts JWT
       \
       &nbsp;&nbsp; ↓
+
    3. _Auth Service_ validates JWT, returns `user_id`
       \
       &nbsp;&nbsp; ↓
+
    4. _Ngnix_ adds `user_id` to headers
       \
       &nbsp;&nbsp; ↓
+
    5. Destination service receives request
 
 &nbsp;
@@ -146,12 +164,15 @@ Manages users, user data, user settings
    1. _Front_ sends a `GET` request
       \
       &nbsp;&nbsp; ↓
+
    2. _Users Service_ fetches users details from _Redis_.
       \
       &nbsp;&nbsp; ↓
-   3. If type of detail is stored in _Auth0_, _Auth Service_ fetches them.
+
+   3. If type of detail is stored in _Auth0_, a `GET` request is sent from the _Users Service_.
       \
       &nbsp;&nbsp; ↓
+
    4. _Front_ receives users details in a list
 
 &nbsp;
@@ -160,9 +181,11 @@ Manages users, user data, user settings
    1. _Front_ sends a `GET` request
       \
       &nbsp;&nbsp; ↓
+
    2. _Users Service_ fetches user details from _Redis_.
       \
       &nbsp;&nbsp; ↓
+
    3. _Front_ receives users details in an object
 
 &nbsp;
@@ -176,16 +199,13 @@ Manages users, user data, user settings
    1. _Front_ sends a `PUT` request
       \
       &nbsp;&nbsp; ↓
-   2. _Users Service_ update user details in _Redis_.
+
+   2. _Users Service_ update user details in _Redis_.\
+      If detail is not in _Redis_ but in _Auth0_, updates it there.
       \
       &nbsp;&nbsp; ↓
-   3. _DB Writer Service_ updates details in _DB_ (not affecting flow)
-      \
-      &nbsp;&nbsp; ↓
-   4. _Auth Service_ updates details in _Auth0_
-      \
-      &nbsp;&nbsp; ↓
-   5. _Front_ receives users details in an object
+
+   3. _Front_ receives users details in an object.
 
 &nbsp;
 
@@ -198,19 +218,20 @@ Manages users, user data, user settings
    1. _Front_ sends a `PUT` request
       \
       &nbsp;&nbsp; ↓
+
    2. _Users Service_ update setting in _Redis_.
       \
       &nbsp;&nbsp; ↓
-   3. _DB Writer Service_ updates details in _DB_ (not affecting flow)
+
+   3. _Users Service_ sends `setting-updated` event to _Kafka_.
       \
       &nbsp;&nbsp; ↓
-   4. _Users Service_ sends `setting-updated` event to _Kafka_.
+
+   4. _Front_ receives a `succeeded` response
       \
-      &nbsp;&nbsp; ↓
+      &nbsp;&nbsp; ...
+
    5. Relevant service fetches event from _Kafka_ and updates correlated setting in _Redis_
-      \
-      &nbsp;&nbsp; ↓
-   6. _Front_ receives a `succeeded` response
 
 &nbsp;
 
@@ -222,13 +243,20 @@ Manages users, user data, user settings
    1. When user enters the app, the _Front_ receives all user details (see flow above).
       \
       &nbsp;&nbsp; ↓
+
    2. If allowed, and when WS Connection is open, _Front_ sends a WS Message that the user's connected
       \
       &nbsp;&nbsp; ↓
+
    3. _WebSocket Service_ broadcast the message through all of the rooms the user is part of
       \
       &nbsp;&nbsp; ↓
+
    4. _Front_ receives message, and ignores it unless the user is currently displayed in the chat settings
+      \
+      &nbsp;&nbsp; ...
+
+   5. _Users Service_ sets connection status flag in _Redis_
 
 &nbsp;
 
@@ -252,35 +280,44 @@ Manages users, user data, user settings
     1.  _Front_ sends a `DELETE` request
         \
       &nbsp;&nbsp; ↓
+
     2.  _Users Service_ removes all of the details about the user, except it's `user_id` from _Redis_.\
         Toggles the `removed` value to `True`
         \
       &nbsp;&nbsp; ↓
+
     3.  If GDPR allows, stores single value for later reconnect the user to existing data.\
-        _Users Service_ fetches this data from _Auth0_
-    - [ ] ==_TODO: Check GDPR Guides_==
-          \
+         _Users Service_ fetches this data from _Auth0_
+        \
       &nbsp;&nbsp; ↓
+
+    - [ ] ==_TODO: Check GDPR Guides_==
     4. _Auth Service_ removes user from _Auth0_
        \
       &nbsp;&nbsp; ↓
-    5. _Lists Service_ removes all of the associated lists that were not shared, including all associated items from _Redis_.
+
+    5. _WebSocket Service_ removes the user from all of the rooms he's in.
        \
       &nbsp;&nbsp; ↓
-    6. _Chat Service_ removes all of the associated chats, including the messages there were sent, if any, from _Redis_.\
+
+    6. _Users Service_ returns an `operation succeeded` result to the _Front_
+       \
+      &nbsp;&nbsp; ↓
+
+    7. _Front_ display the Sign Up page.
+       \
+      &nbsp;&nbsp; ...
+
+    8. _Lists Service_ removes all of the associated lists that were not shared, including all associated items from _Redis_.
+       \
+      &nbsp;&nbsp; ↓
+
+    9. _Chat Service_ removes all of the associated chats, including the messages there were sent, if any, from _Redis_.\
        (All of the messages sent by the removed user that are not part of unshared lists are saved though).
        \
       &nbsp;&nbsp; ↓
-    7. _Product History Manager Service_ removes the list of latest items from _Redis_
-       \
-      &nbsp;&nbsp; ↓
-    8. _WebSocket Service_ removes the user from all of the rooms he's in.
-       \
-      &nbsp;&nbsp; ↓
-    9. _Users Service_ returns an `operation succeeded` result to the _Front_
-       \
-      &nbsp;&nbsp; ↓
-    10. _Front_ display the Sign Up page.
+
+    10. _Product History Manager Service_ removes the list of latest items from _Redis_
 
 &nbsp;
 
@@ -288,32 +325,39 @@ Manages users, user data, user settings
    1. _Front_ removes identification details from localhost
       \
       &nbsp;&nbsp; ↓
+
    2. _WebSocket Service_ removes the user from all of his rooms
       \
       &nbsp;&nbsp; ↓
+
    - [ ] ==_TODO: FIGURE OUT WHATS NEXT_==
          \
       &nbsp;&nbsp; ↓
+
    3. _Front_ displays Login Screen
 
 &nbsp;
 
 ### _Lists Service_
 
-1. **Get Lists** - _SSE_\
+1. **Get Lists**<span id="get-lists"></span>- _SSE_\
    This flow is used in the Home Page and focused on minimal metadata and preview-display specific data
    1. _Front_ sends `GET` request
       \
       &nbsp;&nbsp; ↓
+
    2. Lists are fetched from _Redis_.
       \
       &nbsp;&nbsp; ↓
+
    3. For every list, items are fetched from _Redis_ - 5 at most.
       \
       &nbsp;&nbsp; ↓
+
    4. Lists Service publishes event to Kafka, consumed by _Chat Service_
       \
       &nbsp;&nbsp; ↓
+
    5. **First response is sent to _Front_.**\
       _Content of Response:_
 
@@ -340,9 +384,11 @@ Manages users, user data, user settings
    7. _Chat Service_ read event from _Kafka_
       \
       &nbsp;&nbsp; ↓
+
    8. _Chat Service_ fetches amount of unread messages for every list, and last message
       \
       &nbsp;&nbsp; ↓
+
    9. **Second response is sent to the front.**\
       _Content of Response:_
 
@@ -359,21 +405,25 @@ Manages users, user data, user settings
    10. _Front_ display new data.
        \
       &nbsp;&nbsp; ↓
+
    11. SSE Closes.\
-       _Later updates are based on WS activities._
+_Later updates are based on WS activities._
 
 &nbsp;
 
-2. **Get List by ID**
+2. **Get List by `list-id`**
    1. _Front_ sends `GET` request
       \
       &nbsp;&nbsp; ↓
-   2. List is fetched from _Redis_ based on ID.
+
+   2. _Lists Service_ fetches list details and item list from _Redis_.
       \
       &nbsp;&nbsp; ↓
-   3. List returns to _Front_, with all metadata and items metadata.
+
+   3. _Lists Service_ returns the List to _Front_, with all metadata and items metadata.
       \
       &nbsp;&nbsp; ↓
+
    4. _Front_ displays list
 
 &nbsp;
@@ -382,16 +432,20 @@ Manages users, user data, user settings
    1. _Front_ sends a `POST` request
       \
       &nbsp;&nbsp; ↓
+
    2. _Lists Service_ creates a new empty list in _Redis_
       \
       &nbsp;&nbsp; ↓
-   3. _Chat Service_ creates a new chat room
+
+   3. _Front_ displays the new list
+      \
+      &nbsp;&nbsp; ...
+
+   4. _Chat Service_ creates a new chat for the associated list
       \
       &nbsp;&nbsp; ↓
-   4. _WebSocket Service_ enters the user to associated room
-      \
-      &nbsp;&nbsp; ↓
-   5. _Front_ displays the new list
+
+   5. _WebSocket Service_ enters the user to associated room
 
 &nbsp;
 
@@ -399,17 +453,17 @@ Manages users, user data, user settings
    1. _Front_ sends `POST` request
       \
       &nbsp;&nbsp; ↓
+
    2. List / Item is updated on _Redis_.\
       **For items** - when version number is lower than what's on _Redis_, new item is created instead of modification of existing item.
       \
       &nbsp;&nbsp; ↓
-   3. _WebSocket Service_ fetches the event from _Kafka_
+
+   3. _Front_ displays update.
       \
-      &nbsp;&nbsp; ↓
-   4. Update is broadcasted to all room members
-      \
-      &nbsp;&nbsp; ↓
-   5. _Front_ displays update.
+      &nbsp;&nbsp; ...
+
+   4. _WebSocket Service_ broadcasting update / new item to all room members
       > [!NOTE]
       >
       > For the user who made the update, it displayed before being broadcasted. If there is a problem, silent retry and backup in localhost.
@@ -425,61 +479,57 @@ Manages users, user data, user settings
    1. _Front_ sends `POST` request with list of `user_id` and unrecognized phone numbers
       \
       &nbsp;&nbsp; ↓
-   2. _Lists Service_ adds members to list
+
+   2. _Lists Service_ adds members (who exists in the DB already) to list
       \
       &nbsp;&nbsp; ↓
-   3. _Lists Service_ publishes event to _Kafka_, consumed by:
-      - _Chat Service_
-      - _SMS Service (planned)_
+
+   3. _Lists Service_ publishes events to _Kafka_, consumed by:
+      - _Chat Service_ - adding existing users to chat
+      - _SMS Service (planned)_ - sending invitations to sing up to CoList and enter the list
+      - _WebSocket Service_ - list details (same structure as in the [get-lists flow](#get-lists))
 
       &nbsp;&nbsp; ↓
 
-   4. _Chat Service_ enters users to equivalent chat
+   4. _Front_ receives a `succeeded` response
       \
-      &nbsp;&nbsp; ↓
-   5. _WebSocket Service_ adds users to room
-      \
-      &nbsp;&nbsp; ↓
-   6. _Lists Service_ publish event to _Kafka_, consumed by _WebSocket Service_ with following data:
+      &nbsp;&nbsp; ...
 
-   ```JSON
-   {
-      "user_id": [""],
-      "list": {
-         "id": "",
-         "name": "",
-         "update time": "",
-         "silent": false,
-         "items": [
-            {
-               "id": "",
-               "content": "",
-               "checked": false
-            }
-         ]
-      }
-   }
-   ```
-
-   7. _WebSocket Service_ consumes event from _Kafka_, sends message to all users under `user_id`
+   5. _Chat Service_ enters users to equivalent chat
       \
       &nbsp;&nbsp; ↓
-   8. _Front_ displays new list
+
+   6. _WebSocket Service_ adds users to room
+      \
+      &nbsp;&nbsp; ↓
+
+   7. _WebSocket Service_ sends list details for every new member (fetched from _Kafka_)
+      \
+      &nbsp;&nbsp; ↓
+
+   8. _Front_ (of new members) displays new list
 
 &nbsp;
 
 6. **Leave List**\
-   Relevant only if the user is **NOT** the only member of the list
+    Relevant only if the user is **NOT** the only member of the list
    1. _Front_ sends `PUT` request
       \
       &nbsp;&nbsp; ↓
+
    2. The _Lists Service_ removes the user from the list
       \
       &nbsp;&nbsp; ↓
+
    3. _Chat Service_ removes the user from the equivalent chat in _Redis_
       \
       &nbsp;&nbsp; ↓
+
    4. _WebSocket Service_ removes the user from the equivalent room
+      \
+      &nbsp;&nbsp; ↓
+
+   5. _Front_ receives a `succeeded` response
 
 &nbsp;
 
@@ -488,15 +538,19 @@ Manages users, user data, user settings
    1. _Front_ sends `DELETE` request
       \
       &nbsp;&nbsp; ↓
+
    2. The _Lists Service_ removes the list and all of the items from _Redis_
       \
       &nbsp;&nbsp; ↓
-   3. _Chat Service_ removes chat and all of the message from _Redis_
+
+   3. _Front_ receives a `succeeded` response
+      \
+      &nbsp;&nbsp; ...
+
+   4. _Chat Service_ removes chat and all of the message from _Redis_
       \
       &nbsp;&nbsp; ↓
-   4. _DB Writer Service_ updates _DB_ accordingly (not affecting flow).
-      \
-      &nbsp;&nbsp; ↓
+
    5. _WebSocket Service_ removes the user from the equivalent room
 
 &nbsp;
@@ -506,74 +560,121 @@ Manages users, user data, user settings
    1. _Front_ sends `PUT` request
       \
       &nbsp;&nbsp; ↓
+
    2. _Lists Service_ changes the `state` in the `list_id` to `closed`
       \
       &nbsp;&nbsp; ↓
-   3. _WebSocket Service_ keeps the users in the room, but it stops accepting any WS Message that is not "list is not open anymore"
+
+   3. _Front_ receives a `succeeded` response
+      \
+      &nbsp;&nbsp; ...
+
+   4. _WebSocket Service_ keeps the users in the room, but it stops accepting any WS Message that is not "list is not closed anymore"
 
 &nbsp;
 
-9. **Get list settings**<span id="list-settings"></span>
+9. **Get list settings**<span id="list-settings"></span> - _SSE_
    1. _Front_ sends a `GET` request with list of users with undefined connection status
       \
       &nbsp;&nbsp; ↓
+
    2. _Lists Service_ fetches data from _Redis_
       \
       &nbsp;&nbsp; ↓
-   3. _Users Service_ fetches connection status for each user in the list settings
+
+   3. _Lists Service_ send response to front
       \
       &nbsp;&nbsp; ↓
-   4. _Lists Service_ send response to front
+
+   4. _Front_ displays data
+      \
+      &nbsp;&nbsp; ...
+
+   5. _Users Service_ fetches connection status for each user in the list settings
       \
       &nbsp;&nbsp; ↓
-   5. _Front_ displays data
+
+   6. _Front_ displays data
+      \
+      &nbsp;&nbsp; ↓
+
+   7. SSE Closes.\
+_Later updates are based on WS activities._
 
 &nbsp;
 
 ### _Chat Service_
 
-1. **Send message**
-   ![Flow Diagram](./Diagrams/Chat_Service_-_Send_Message.drawio.svg)
+1. **Get Chat by `chat-id`**
+   1. _Front_ sends a `GET` request
+      \
+      &nbsp;&nbsp; ↓
+
+   2. _Chat Service_ fetches chat details from _Redis_.
+      \
+      &nbsp;&nbsp; ↓
+
+   3. _Front_ receives chat details and message in an object
+
+&nbsp;
+
+2. **Send message**
+
+   <img src="./Diagrams/Chat_Service_-_Send_Message.drawio.svg" alt="Flow Diagram">
+   <figcaption style="margin-top: 0.2rem; text-align: center; font-size: 0.90rem; opacity: 60%;; margin-bottom: -1.5rem">Representation of the flow</figcaption>
+
+   &nbsp;
    1. _Front_ sends message through WS Connection
       \
       &nbsp;&nbsp; ↓
+
    2. WS Connection provides the message to the _Chat Service_, while broadcasting it to all of the room members
       \
       &nbsp;&nbsp; ↓
+
    3. _Chat Service_ writes all of the messages in _Redis_
       \
       &nbsp;&nbsp; ↓
+
    4. The _Front_ of all of the listeners receives the message, and ping the _WebSocket Service_
       \
       &nbsp;&nbsp; ↓
+
    5. The _WebSocket Service_ provides the ping messages to the _Chat Service_
       \
       &nbsp;&nbsp; ...
+
    6. For every user who sees the message (enters viewable area in _Front_), _Front_ sends `seen` WS Message
       \
       &nbsp;&nbsp; ↓
+
    7. The _WebSocket Service_ provides the `seen` messages to _Chat Service_
       \
       &nbsp;&nbsp; ...
+
    8. When _Chat Service_ sees that all of the listeners received the message,\
       it sends the sender a `received by all` WS Message.
       \
       &nbsp;&nbsp; ...
+
    9. When _Chat Service_ sees that all of the listeners saw the message,\
       it sends the sender a `saw by all` WS Message.
 
 &nbsp;
 
-2. **Edit message**
+3. **Edit message**
    1. _Front_ sends new new message content through WS Connection
       \
       &nbsp;&nbsp; ↓
+
    2. WS Connection sends new content to all listeners and to _Chat Service_
       \
       &nbsp;&nbsp; ↓
+
    3. _Chat Service_ stores new message content in _Redis_
       \
       &nbsp;&nbsp; ...
+
    4. All listeners' _Front_ display new content
 
 &nbsp;
