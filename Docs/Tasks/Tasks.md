@@ -44,3 +44,4 @@ Tasks:
    $\color{red} TODO$
 
 9. Read all of the conversation [here](https://chatgpt.com/share/69278556-74c0-8006-9154-70dc7853256e) and pull tasks from the conversation.
+   and [here](https://chatgpt.com/c/692898d9-eedc-8327-af59-00897a56b42d)

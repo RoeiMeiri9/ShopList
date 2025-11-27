@@ -5,6 +5,8 @@ variables:
   auth-service: _Auth Service_
   lists-service: _Lists Service_
   chat-service: _Chat Service_
+  message-received-service: _Message Received Service_
+  message-seen-service: _Message Seen Service_
   ws-service: _WebSocket Service_
   db-writer-service: _DB Writer Service_
   message-analyzer-service: _Message Analyzer Service_
@@ -519,7 +521,7 @@ Manages users, user data, user settings
 
 2. **Send message**
 
-   <img src="./Diagrams/Chat_Service_-_Send_Message.drawio.svg" alt="Flow Diagram">
+   <img src="./Diagrams/send_message/Chat_Service_-_Send_Message.drawio.svg" alt="Flow Diagram">
    <figcaption style="{{caption-style}}; margin-bottom: -1.5rem">Representation of the flow</figcaption>
 
    {{space}}
@@ -527,20 +529,20 @@ Manages users, user data, user settings
       {{↓}}
    2. {{ws-connection}} provides the message to the {{chat-service}}, while broadcasting it to all of the room members
       {{↓}}
-   3. {{chat-service}} writes all of the messages in {{redis}}
+   3. {{chat-service}} writes the message in {{redis}}
       {{↓}}
    4. The {{front}} of all of the listeners receives the message, and ping the {{ws-service}}
       {{↓}}
-   5. The {{ws-service}} provides the ping messages to the {{chat-service}}
+   5. The {{ws-service}} provides the ping messages to the {{message-received-service}}
       {{after-awhile}}
    6. For every user who sees the message (enters viewable area in {{front}}), {{front}} sends `seen` {{ws-message}}
       {{↓}}
-   7. The {{ws-service}} provides the `seen` messages to {{chat-service}}
+   7. The {{ws-service}} provides the `seen` messages to {{message-seen-service}}
       {{after-awhile}}
-   8. When {{chat-service}} sees that all of the listeners received the message,\
+   8. When {{message-received-service}} sees that all of the listeners received the message,\
       it sends the sender a `received by all` {{ws-message}}.
       {{after-awhile}}
-   9. When {{chat-service}} sees that all of the listeners saw the message,\
+   9. When {{message-seen-service}} sees that all of the listeners saw the message,\
       it sends the sender a `saw by all` {{ws-message}}.
 
 {{space}}

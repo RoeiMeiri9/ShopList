@@ -620,7 +620,7 @@ _Later updates are based on WS activities._
 
 2. **Send message**
 
-   <img src="./Diagrams/Chat_Service_-_Send_Message.drawio.svg" alt="Flow Diagram">
+   <img src="./Diagrams/send_message/Chat_Service_-_Send_Message.drawio.svg" alt="Flow Diagram">
    <figcaption style="margin-top: 0.2rem; text-align: center; font-size: 0.90rem; opacity: 60%;; margin-bottom: -1.5rem">Representation of the flow</figcaption>
 
    &nbsp;
@@ -632,7 +632,7 @@ _Later updates are based on WS activities._
       \
       &nbsp;&nbsp; ↓
 
-   3. _Chat Service_ writes all of the messages in _Redis_
+   3. _Chat Service_ writes the message in _Redis_
       \
       &nbsp;&nbsp; ↓
 
@@ -640,7 +640,7 @@ _Later updates are based on WS activities._
       \
       &nbsp;&nbsp; ↓
 
-   5. The _WebSocket Service_ provides the ping messages to the _Chat Service_
+   5. The _WebSocket Service_ provides the ping messages to the _Message Received Service_
       \
       &nbsp;&nbsp; ...
 
@@ -648,16 +648,16 @@ _Later updates are based on WS activities._
       \
       &nbsp;&nbsp; ↓
 
-   7. The _WebSocket Service_ provides the `seen` messages to _Chat Service_
+   7. The _WebSocket Service_ provides the `seen` messages to _Message Seen Service_
       \
       &nbsp;&nbsp; ...
 
-   8. When _Chat Service_ sees that all of the listeners received the message,\
+   8. When _Message Received Service_ sees that all of the listeners received the message,\
       it sends the sender a `received by all` WS Message.
       \
       &nbsp;&nbsp; ...
 
-   9. When _Chat Service_ sees that all of the listeners saw the message,\
+   9. When _Message Seen Service_ sees that all of the listeners saw the message,\
       it sends the sender a `saw by all` WS Message.
 
 &nbsp;
