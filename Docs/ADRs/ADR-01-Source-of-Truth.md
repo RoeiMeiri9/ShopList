@@ -2,13 +2,13 @@
 
 ## Decision
 
-Redis is the authoritative real-time state store.
+Redis is the authoritative real-time store. DB is durable eventual store populated by DB Writer.
 
 ## Context
 
-Redis is fast, supports atomic operations, used by all services.
+Low-latency collaboration, presence and counters require in-memory store.
 
 ## Consequences
 
-- Conflicts resolved by Redis version number.
-- DB Writer never overwrites Redis.
+- DB Writer must be careful not to overwrite fresher Redis state.
+- Recovery process required when Redis restarts.

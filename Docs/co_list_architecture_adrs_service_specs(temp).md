@@ -171,13 +171,3 @@ Flows.md [kept short, references ADRs]
 
 - Add ADR: `docs/adrs/ADR-09-Name.md` with `Decision / Context / Consequences`.
 - Update Flows: find repeated infra items and replace with `Notes: See ADR-03`.
-
----
-
-If you want, I can now:
-
-- (A) produce the actual separate files (one canvas doc can contain them concatenated), or
-- (B) apply the changes directly to your `Flows.md` (refactor + add references), or
-- (C) generate the ADR files only.
-
-Pick A/B/C and I'll proceed.
