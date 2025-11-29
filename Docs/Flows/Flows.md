@@ -66,7 +66,7 @@ Before continue, make sure you read the following notes:
 
 ## Architecture
 
-   <img src="../../Architecture/Current/ShopList-Architecture-v1.2.drawio.svg" alt="CoList Architecture v1.2">
+   <img src="../Architecture/Current/ShopList-Architecture-v1.2.drawio.svg" alt="CoList Architecture v1.2">
    <figcaption style="margin-top: 0.2rem; text-align: center; font-size: 0.90rem; opacity: 60%;"> CoList Architecture v1.2</figcaption>
 
 &nbsp;
@@ -273,7 +273,7 @@ Manages users, user data, user settings
       2. User data from _Auth0_
 
     - **What will stay:**
-      1. `user_id` (and `removed` toggle will be on)
+      1. `user_id` (and `removed` toggle will be on). **Stored ONLY IN THE _DB_**
       2. All of the shared lists, closed or open. (Creator will be displayed as [Removed Account])
       3. Every mention of the user will display [Removed Account]\
          &nbsp;
@@ -282,7 +282,8 @@ Manages users, user data, user settings
       &nbsp;&nbsp; ↓
 
     2.  _Users Service_ removes all of the details about the user, except it's `user_id` from _Redis_.\
-        Toggles the `removed` value to `True`
+        Toggles the `removed` value to `True`\
+        **IMPORTANT: Removed users are stored ONLY in the _DB_ AND NOT in _Redis_**
         \
       &nbsp;&nbsp; ↓
 
@@ -689,3 +690,9 @@ For that reason, this is an async operation.
 > [!NOTE]
 >
 > This service may not be part of MVP
+
+> [!NOTE]
+>
+> Future Resilience Policy
+>
+> The Redis recovery mechanism for scale-up (Phase 2) is documented in ADR-10: Redis Recovery Strategy. This mandates implementing a Recovery Coordinator and a Global Recovery Flag when the system reaches 8+ services to prevent Thundering Herd.

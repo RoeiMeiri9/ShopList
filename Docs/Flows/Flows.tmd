@@ -121,7 +121,7 @@ Before continue, make sure you read the following notes:
 
 ## Architecture
 
-   <img src="../../Architecture/Current/ShopList-Architecture-v1.2.drawio.svg" alt="{{app-name}} Architecture v1.2">
+   <img src="../Architecture/Current/ShopList-Architecture-v1.2.drawio.svg" alt="{{app-name}} Architecture v1.2">
    <figcaption style="{{caption-style}}"> {{app-name}} Architecture v1.2</figcaption>
 
 {{space}}
@@ -284,14 +284,15 @@ Manages users, user data, user settings
       2. User data from {{auth0}}
 
     - **What will stay:**
-      1. {{user-id}} (and {{removed}} toggle will be on)
+      1. {{user-id}} (and {{removed}} toggle will be on). **Stored ONLY IN THE {{db}}**
       2. All of the shared lists, closed or open. (Creator will be displayed as {{removed_account}})
       3. Every mention of the user will display {{removed_account}}\
          {{space}}
     1.  {{front}} sends a {{delete-snippet}} request
         {{↓}}
     2.  {{users-service}} removes all of the details about the user, except it's {{user-id}} from {{redis}}.\
-        Toggles the {{removed}} value to {{true}}
+        Toggles the {{removed}} value to {{true}}\
+        **IMPORTANT: Removed users are stored ONLY in the {{db}} AND NOT in {{redis}}**
         {{↓}}
     3.  If GDPR allows, stores single value for later reconnect the user to existing data.\
          {{users-service}} fetches this data from {{auth0}}
@@ -568,3 +569,9 @@ For that reason, this is an async operation.
 > [!NOTE]
 >
 > This service may not be part of MVP
+
+> [!NOTE]
+>
+> Future Resilience Policy
+>
+> The Redis recovery mechanism for scale-up (Phase 2) is documented in ADR-10: Redis Recovery Strategy. This mandates implementing a Recovery Coordinator and a Global Recovery Flag when the system reaches 8+ services to prevent Thundering Herd.

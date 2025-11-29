@@ -2,7 +2,7 @@
 
 ## Decision
 
-Use version numbers on mutable entities (items, lists). Higher version wins; on conflict apply CRDT-like simple rule: keep both if version decreased for traceability and surface to UI.
+Use version numbers on mutable entities (items, lists). Higher version wins; on conflict apply simple rule: if it can't be duplicated, drop and raise a monitoring alert.
 
 ## Context
 

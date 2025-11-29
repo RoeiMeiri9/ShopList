@@ -1,0 +1,63 @@
+---
+variables:
+  app-name: CoList
+  users-service: Users Service
+  auth-service: Auth Service
+  lists-service: Lists Service
+  chat-service: Chat Service
+  message-received-service: Message Received Service
+  message-seen-service: Message Seen Service
+  ws-service: WebSocket Service
+  db-writer-service: DB Writer Service
+  message-analyzer-service: Message Analyzer Service
+  keyword-manager-service: Keyword Manager Service
+  scoring-service: Scoring Service
+  ai-suggestions-service: AI Suggestions Service
+  product-history-manager-service: Product History Manager Service
+  sms-service: SMS Service (planned)
+  redis: Redis
+  kafka: Kafka
+  db: DB
+---
+
+# {{app-name}} — Architecture (one page)
+
+## Purpose
+
+Short reference describing main components, consistency model and operational principles.
+
+## Components
+
+- **Realtime store:** {{redis}} — authoritative for runtime state (presence, unread counts, cached lists/items).
+- **Durable store:** Relational/Document {{db}} — long-term persistence via {{db-writer-service}}.
+- **Event bus:** {{kafka}} — durable event log for inter-service communication, replay and analytics.
+- **Transport:** REST for request/response; WebSockets for realtime collaboration.
+
+## Consistency Model
+
+- {{app-name}} operates under **Eventual Consistency**.
+- {{redis}} is the active runtime store; writes to {{redis}} are followed by {{kafka}} events that eventually persist to DB via DB Writer.
+- UI must handle out-of-order events and present optimistic updates.
+
+## Idempotency & Delivery
+
+- {{kafka}} consumers run under **at-least-once** semantics.
+- All {{kafka}}-driven handlers are **idempotent**, using dedupe keys `(entity, id, eventid)` stored in {{redis}}/DB.
+- Clients use hybrid message id flow: `clienttempid` + server canonical `messageid`.
+
+## Resilience & Operational Principles
+
+- **WS Gateway:** heartbeats, per-connection and per-room rate-limits (token-bucket), session counters stored in {{redis}}.
+- **{{redis}} Recovery:** DB Writer or {{kafka}} replay rebuilds {{redis}}; document runbook for recovery.
+- **Monitoring:** any large version conflicts or repeated low-version drops trigger alerts.
+- **UX during recovery:** show non-intrusive banner when system is in recovery mode; consider read-only for affected resources.
+
+## Service Ownership
+
+- Each service owns its {{redis}} keys and {{kafka}} topics that it produces.
+- Cross-service coordination is through {{kafka}} events only; avoid direct cross-service sync calls.
+
+## Operational Notes
+
+- Limit per-room message rates to protect real-time delivery.
+- Keep ADRs small and authoritative (see /docs/adrs).
